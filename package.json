@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "aws-sdk": "^2.865.0",
+    "mailparser": "^3.1.0",
+    "serverless-dotenv-plugin": "^3.8.1"
+  }
+}

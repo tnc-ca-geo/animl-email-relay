@@ -1,0 +1,92 @@
+org: animl
+app: animl
+service: animl-email-relay
+
+plugins:
+  # - serverless-offline
+  - serverless-dotenv-plugin
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:stage, 'dev'}
+  region: ${env:REGION}
+  profile: ${env:AWS_PROFILE}
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - 's3:GetObject'
+        - 's3:ListBucket'
+        - 's3:DeleteObject'
+      Resource:
+        - Fn::Join:
+          - ''
+          - - 'arn:aws:s3:::'
+            - Ref: S3BucketAnimlemailstaging
+        - Fn::Join:
+          - ''
+          - - 'arn:aws:s3:::'
+            - Ref: S3BucketAnimlemailstaging
+            - '/*'
+  iamManagedPolicies:
+    - 'arn:aws:iam::aws:policy/AWSLambdaExecute'
+  environment:
+    STAGE: ${opt:stage, self:provider.stage, 'dev'}
+
+
+functions:
+  relayImages:
+    name: relayImagesLambdaFunction-${opt:stage, self:provider.stage, 'dev'}
+    handler: src/handler.relayImages
+    reservedConcurrency: 10 # max number of lambdas to invoke at one time
+    events:
+      - s3:
+          bucket: animl-email-staging-${opt:stage, self:provider.stage, 'dev'}
+          existing: true
+          event: s3:ObjectCreated:*
+
+resources:
+  Resources:
+    # Staging bucket
+    S3BucketAnimlemailstaging:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: animl-email-staging-${opt:stage, self:provider.stage, 'dev'}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+    # Bucket policy for animl-email-staging
+    S3BucketPolicyAnimlEmailStagingBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties: 
+        Bucket: 
+          Ref: S3BucketAnimlemailstaging
+        PolicyDocument: 
+          Statement: 
+            -
+              Action: 
+                - "s3:PutObject"
+              Effect: "Allow"
+              Resource:
+                - "arn:aws:s3:::animl-email-staging-${opt:stage, self:provider.stage, 'dev'}/*"
+                - "arn:aws:s3:::animl-email-staging-${opt:stage, self:provider.stage, 'dev'}"
+              Principal:
+                Service: ses.amazonaws.com
+              Condition:
+                StringEquals:
+                  "aws:Referer": { Ref: AWS::AccountId }
+    # # Lambda Permission grants the bucket permission to invoke the function
+    # LambdaPermissionAnimlemailstaging:
+    #   Type: AWS::Lambda::Permission
+    #   Properties:
+    #     FunctionName:
+    #       Fn::GetAtt: # grabs function arn
+    #         - relayImagesLambdaFunction
+    #         - Arn
+    #     Principal: s3.amazonaws.com
+    #     Action: lambda:InvokeFunction
+    #     SourceAccount:
+    #       Ref: AWS::AccountId
+    #     SourceArn: arn:aws:s3:::animl-email-staging-${opt:stage, self:provider.stage, 'dev'}
