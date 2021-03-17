@@ -28,6 +28,19 @@ provider:
           - - 'arn:aws:s3:::'
             - Ref: S3BucketAnimlemailstaging
             - '/*'
+    - Effect: 'Allow'
+      Action:
+        - 's3:PutObject'    
+      Resource:
+        - Fn::Join:
+          - ''
+          - - 'arn:aws:s3:::'
+            - animl-data-staging-${opt:stage, self:provider.stage, 'dev'}
+        - Fn::Join:
+          - ''
+          - - 'arn:aws:s3:::'
+            - animl-data-staging-${opt:stage, self:provider.stage, 'dev'}
+            - '/*'
   iamManagedPolicies:
     - 'arn:aws:iam::aws:policy/AWSLambdaExecute'
   environment:

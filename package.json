@@ -1,7 +1,9 @@
 {
   "dependencies": {
     "aws-sdk": "^2.865.0",
+    "htmlparser2": "^6.0.1",
     "mailparser": "^3.1.0",
-    "serverless-dotenv-plugin": "^3.8.1"
+    "serverless-dotenv-plugin": "^3.8.1",
+    "superagent": "^6.1.0"
   }
 }
