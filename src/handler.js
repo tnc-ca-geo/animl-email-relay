@@ -7,6 +7,7 @@ const agent = require('superagent');
 
 const DATA_STAGING_BUCKET = `animl-data-staging-${process.env.STAGE}`;
 const LINCKEAZI_RE = new RegExp(/linckeazi/, 'i');
+const RIDGETEC_RE = new RegExp(/ridgetec/, 'i');
 
 const uploadToS3 = async (imgBuffer, key, bucket=DATA_STAGING_BUCKET) => {
   console.log('Uploading to s3');
@@ -52,6 +53,14 @@ const extractFilename = {
   },
 }
 
+const getMake = (sender) => {
+  let make = 'other'
+  if (LINCKEAZI_RE.test(sender)) { make = 'LinckEazi' };
+  if (RIDGETEC_RE.test(sender)) { make = 'RidgeTec' };
+  console.log('camera make: ', make);
+  return make;
+};
+
 module.exports.relayImages = async (event) => {
 
   const record = event.Records[0];
@@ -65,15 +74,15 @@ module.exports.relayImages = async (event) => {
     const email = await simpleParser(data.Body);
     console.log('email parsed: ', email);
 
-    // If email is from linckeazi
-    const make = (LINCKEAZI_RE.test(email.from.text)) ? 'LinckEazi' : 'other';
+    // If email is from a supported camera maker
+    const make = getMake(email.from.text);
     if (make === 'other') {
       throw new Error('Email is not from a supported camera make');
     }
 
-    const filename = extractFilename[make](email);
-    const imgBuffer = await extractImage[make](email);
-    await uploadToS3(imgBuffer, filename);
+    // const filename = extractFilename[make](email);
+    // const imgBuffer = await extractImage[make](email);
+    // await uploadToS3(imgBuffer, filename);
 
     return { status: 'success' };
   }
