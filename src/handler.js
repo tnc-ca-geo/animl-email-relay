@@ -1,4 +1,5 @@
 'use strict';
+const url = require('url');
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 const simpleParser = require('mailparser').simpleParser;
@@ -39,6 +40,7 @@ const extractImage = {
       },
     });
     parser.write(email.html);
+    parser.end();
     const img = await agent.get(imgLink);
     return Buffer.from(img.body, 'binary');;
   },
@@ -50,6 +52,22 @@ const extractFilename = {
     const subject = email.subject;
     const parts = subject.split('_');
     return parts.filter(part => part.includes('.jpg'))[0];
+  },
+  'RidgeTec': (email) => {
+    // NOTE: this is temporary. I don't think this is the filename that gets
+    // stored/displayed in the RidgeTec portal. 
+    console.log('extracting filename from RidgeTec email');
+    let filename = 'UNKNOWN_FILENAME.JPG';
+    const parser = new htmlparser2.Parser({
+      onattribute(name, value) {
+        if (name === 'src') {
+          filename = url.parse(value, true).pathname.split('/')[2];
+        }
+      },
+    });
+    parser.write(email.html);
+    parser.end();
+    return filename;
   },
 }
 
@@ -80,7 +98,7 @@ module.exports.relayImages = async (event) => {
       throw new Error('Email is not from a supported camera make');
     }
 
-    // const filename = extractFilename[make](email);
+    const filename = extractFilename[make](email);
     // const imgBuffer = await extractImage[make](email);
     // await uploadToS3(imgBuffer, filename);
 
