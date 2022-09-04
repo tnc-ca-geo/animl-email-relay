@@ -2,16 +2,12 @@ org: animl
 app: animl
 service: animl-email-relay
 
-plugins:
-  # - serverless-offline
-  - serverless-dotenv-plugin
-
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: python3.6
   stage: ${opt:stage, 'dev'}
-  region: ${env:REGION}
-  profile: ${env:AWS_PROFILE}
+  region: us-west-2
+  profile: animl
   iamRoleStatements:
     - Effect: 'Allow'
       Action:
@@ -46,17 +42,18 @@ provider:
   environment:
     STAGE: ${opt:stage, self:provider.stage, 'dev'}
 
-
 functions:
   relayImages:
     name: relayImagesLambdaFunction-${opt:stage, self:provider.stage, 'dev'}
-    handler: src/handler.relayImages
+    handler: src/handler.handler
     reservedConcurrency: 10 # max number of lambdas to invoke at one time
     events:
       - s3:
           bucket: animl-email-staging-${opt:stage, self:provider.stage, 'dev'}
-          existing: true
           event: s3:ObjectCreated:*
+          existing: true
+    layers:
+      - arn:aws:lambda:${self:provider.region}:445285296882:layer:perl-5-26-runtime:12
 
 resources:
   Resources:
@@ -103,3 +100,16 @@ resources:
     #     SourceAccount:
     #       Ref: AWS::AccountId
     #     SourceArn: arn:aws:s3:::animl-email-staging-${opt:stage, self:provider.stage, 'dev'}
+
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+    dockerFile: Dockerfile
+    useDownloadCache: false
+    useStaticCache: false
+    dockerExtraFiles:
+      - -r /output/exiftool/
+
+plugins:
+  - serverless-python-requirements

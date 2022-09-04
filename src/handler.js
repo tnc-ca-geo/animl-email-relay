@@ -5,6 +5,7 @@ const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 const simpleParser = require('mailparser').simpleParser;
 const htmlparser2 = require('htmlparser2');
 const agent = require('superagent');
+const exiftool = require("exiftool-vendored").exiftool;
 
 const DATA_STAGING_BUCKET = `animl-data-staging-${process.env.STAGE}`;
 const LINCKEAZI_RE = new RegExp(/linckeazi/, 'i');
@@ -44,6 +45,20 @@ const extractImage = {
     const img = await agent.get(imgLink);
     return Buffer.from(img.body, 'binary');;
   },
+  'RidgeTec': async (email) => {
+    console.log('extracting image from RidgeTec email');
+    let imgLink; 
+    const parser = new htmlparser2.Parser({
+      onattribute(name, value) {
+        if (name === 'src') {
+          imgLink = value;
+        }
+      },
+    });
+    parser.write(email.html);
+    parser.end();
+    const img = await agent.get(imgLink);
+    return Buffer.from(img.body, 'binary');;  },
 }
 
 const extractFilename = {
@@ -88,6 +103,12 @@ module.exports.relayImages = async (event) => {
   };
 
   try {
+    // test exiftool
+    exiftool
+      .version()
+      .then((version) => console.log(`We're running ExifTool v${version}`));
+    exiftool.end();
+
     const data = await s3.getObject(request).promise();
     const email = await simpleParser(data.Body);
     console.log('email parsed: ', email);
@@ -99,7 +120,12 @@ module.exports.relayImages = async (event) => {
     }
 
     const filename = extractFilename[make](email);
-    // const imgBuffer = await extractImage[make](email);
+
+    const imgBuffer = await extractImage[make](email);
+    // TODO: if no img found, throw error
+
+    // TODO: post-process img (enrich EXIF)
+
     // await uploadToS3(imgBuffer, filename);
 
     return { status: 'success' };
