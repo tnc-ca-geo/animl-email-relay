@@ -4,7 +4,7 @@ service: animl-email-relay
 
 provider:
   name: aws
-  runtime: python3.6
+  runtime: python3.7
   stage: ${opt:stage, 'dev'}
   region: us-west-2
   profile: animl
@@ -43,8 +43,8 @@ provider:
     STAGE: ${opt:stage, self:provider.stage, 'dev'}
 
 functions:
-  relayImages:
-    name: relayImagesLambdaFunction-${opt:stage, self:provider.stage, 'dev'}
+  RelayImages:
+    name: RelayImagesLambdaFunction-${opt:stage, self:provider.stage, 'dev'}
     handler: src/handler.handler
     reservedConcurrency: 10 # max number of lambdas to invoke at one time
     events:

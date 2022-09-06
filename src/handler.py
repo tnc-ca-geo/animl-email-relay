@@ -3,14 +3,16 @@
 import os
 # import uuid
 from urllib.parse import unquote_plus
+from email.parser import BytesParser
 # from PIL import Image, ImageFile
 # ImageFile.LOAD_TRUNCATED_IMAGES = True
 import boto3
 from exiftool import ExifTool
 
+
 EXIFTOOL_PATH = "{}/exiftool".format(os.environ["LAMBDA_TASK_ROOT"])
 
-# s3 = boto3.client("s3")
+s3 = boto3.client("s3")
 
 # def copy_to_dlb(errors, md, config):
 #     dl_bkt = config["DEADLETTER_BUCKET"]
@@ -72,20 +74,28 @@ EXIFTOOL_PATH = "{}/exiftool".format(os.environ["LAMBDA_TASK_ROOT"])
 def handler(event, context):
     print("event: {}".format(event))
     for record in event["Records"]:
-        md = {
-          "Bucket": record["s3"]["bucket"]["name"],
-          "Key": unquote_plus(record["s3"]["object"]["key"]),
-        }
-        print("New file detected in {}: {}".format(md["Bucket"], md["Key"]))
 
-        # # test exiftool
-        # os.environ["PATH"] = "{}:{}/".format(os.environ["PATH"], EXIFTOOL_PATH)
-        # with ExifTool() as et:
-        #     print(et.version)
+        email_bucket = record["s3"]["bucket"]["name"]
+        email_key = unquote_plus(record["s3"]["object"]["key"])
+        print("New file detected in {}: {}".format(email_bucket, email_key))
 
-        # TODO: get object from S3
+        # test exiftool
+        os.environ["PATH"] = "{}:{}/".format(os.environ["PATH"], EXIFTOOL_PATH)
+        with ExifTool() as et:
+            print("exiftool version:")
+            print(et.version)
 
-        # TODO: parse email 
+        # get object from S3
+        email_data = s3.get_object(Bucket = email_bucket, Key = email_key)
+        email_data = email_data["Body"].read()
+
+        # parse email 
+        parser = BytesParser()
+        email_parsed = parser.parsebytes(email_data)
+        print("email parsed by parser.parsebytes: ")
+        print(email_parsed)
+
+        # TODO: determine make 
 
         # TODO: process
 
