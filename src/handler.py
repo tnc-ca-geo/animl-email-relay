@@ -1,16 +1,22 @@
 #!/opt/bin/perl
 
 import os
+from re import L
+import sys
 # import uuid
 from urllib.parse import unquote_plus
-from email.parser import BytesParser
+import email
+from email import policy
+from html.parser import HTMLParser
+import codecs
+# from email.parser import BytesParser
 # from PIL import Image, ImageFile
 # ImageFile.LOAD_TRUNCATED_IMAGES = True
 import boto3
 from exiftool import ExifTool
 
-
-EXIFTOOL_PATH = "{}/exiftool".format(os.environ["LAMBDA_TASK_ROOT"])
+LAMBDA_TASK_ROOT = os.environ["LAMBDA_TASK_ROOT"]
+EXIFTOOL_PATH = f"{LAMBDA_TASK_ROOT}/exiftool"
 
 s3 = boto3.client("s3")
 
@@ -71,32 +77,84 @@ s3 = boto3.client("s3")
 #     s3.download_file(bucket, key, tmp_path)
 #     return tmp_path
 
+def get_make(email):
+    make = 'other'
+    sender = email.get("From")
+    if ('ridgetec' in sender):
+        make = 'RidgeTec'
+    print(f"make: {make}")
+    return make
+
+class ParseRidgeTec(HTMLParser):
+    def __init__(self):
+        print("initializing parse filename class")
+        HTMLParser.__init__(self)
+        self.img_url = None
+        self.filename = "UNKNOWN_FILENAME.JPG"
+        self.date_time_created = None
+        self.timezone = None
+        self.imei = None
+        self.account_id = None
+
+    def handle_starttag(self, tag, attrs):
+        for attr in attrs:
+            if attr[0] == "src":
+                self.img_url = attr[1]
+                self.filename = attr[1].split('/')[4]
+            if attr[0] == "data-date-time-created":
+                self.date_time_created = attr[1]
+            if attr[0] == "data-timezone":
+                self.timezone = attr[1]       
+            if attr[0] == "data-imei":
+                self.imei = attr[1]
+            if attr[0] == "data-account-id":
+                self.account_id = attr[1]
+            if attr[0] == "data-account-id":
+                self.timezone = attr[1]
+
 def handler(event, context):
-    print("event: {}".format(event))
+    print(f"event: {event}")
     for record in event["Records"]:
 
         email_bucket = record["s3"]["bucket"]["name"]
         email_key = unquote_plus(record["s3"]["object"]["key"])
-        print("New file detected in {}: {}".format(email_bucket, email_key))
+        print(f"New file detected in {email_bucket}: {email_bucket}"
 
-        # test exiftool
-        os.environ["PATH"] = "{}:{}/".format(os.environ["PATH"], EXIFTOOL_PATH)
-        with ExifTool() as et:
-            print("exiftool version:")
-            print(et.version)
+        # # test exiftool
+        # os.environ["PATH"] = "{}:{}/".format(os.environ["PATH"], EXIFTOOL_PATH)
+        # print("PATH: {}".format(os.environ["PATH"]))
+        # with ExifTool() as et:
+        #     print("exiftool version:")
+        #     print(et.version)
 
-        # get object from S3
-        email_data = s3.get_object(Bucket = email_bucket, Key = email_key)
+        # get object from S3, decode, and parse
+        email_data = s3.get_object(Bucket=email_bucket, Key=email_key)
         email_data = email_data["Body"].read()
+        email_data = codecs.decode(email_data, "quopri")
+        email_parsed = email.message_from_bytes(email_data, policy=policy.default)
+        # NOTE: headers still appear to be in quoted-printable encoding!
+        # https://stackoverflow.com/questions/63110730/strange-formatting-of-html-in-ses-mail
+        # print("email parsed from bytes and printed as string: ")
+        # print(email_parsed.as_string())
+        print(f"keys: {email_parsed.keys()}")
 
-        # parse email 
-        parser = BytesParser()
-        email_parsed = parser.parsebytes(email_data)
-        print("email parsed by parser.parsebytes: ")
-        print(email_parsed)
+        # determine make
+        make = get_make(email_parsed)
+        # TODO: if make is 'other', end gracefully
 
-        # TODO: determine make 
+        # get filename
+        ridgetec_parser = ParseRidgeTec()
+        ridgetec_parser.feed(email_parsed.as_string())
+        print(f"img_url: {ridgetec_parser.img_url}")
+        print(f"filename: {ridgetec_parser.filename}")
+        print(f"date_time_created: {ridgetec_parser.date_time_created}")
+        print(f"imei: {ridgetec_parser.imei}")
+        print(f"account_id: {ridgetec_parser.account_id}")
 
-        # TODO: process
+        # TODO extract data attributes
+
+        # TODO download image to /tmp
+
+        # TODO write data attributes to image's exif
 
         # TODO: transfer to animl-images-ingestion bucket
