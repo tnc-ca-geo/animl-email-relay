@@ -9,4 +9,6 @@ RUN mkdir /output && \
     tar -zxf Image-ExifTool-12.44.tar.gz && \
     mkdir exiftool && \
     cp Image-ExifTool-12.44/exiftool exiftool/ && \
-    cp -r Image-ExifTool-12.44/lib exiftool/
+    cp -r Image-ExifTool-12.44/lib exiftool/ \
+    # sed -i 's/#!\/usr\/bin\/perl -w/#!\/opt\/bin\/perl -w/' ./exiftool/exiftool
+    # && sed -i 'Ns/.*/replacement-line/' exiftool/exiftool

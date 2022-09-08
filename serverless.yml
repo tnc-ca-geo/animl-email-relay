@@ -37,6 +37,12 @@ provider:
           - - 'arn:aws:s3:::'
             - animl-data-staging-${opt:stage, self:provider.stage, 'dev'}
             - '/*'
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+        - ssm:GetParameters
+      Resource: 
+        - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*
   iamManagedPolicies:
     - 'arn:aws:iam::aws:policy/AWSLambdaExecute'
   environment:
