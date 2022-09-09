@@ -76,14 +76,11 @@ def download_img(filename, img_url):
     print(f"tmp_path: {tmp_path}")
     with open(tmp_path, 'wb') as handle:
         response = requests.get(img_url, stream=True)
-
         if not response.ok:
             print(response)
-
         for block in response.iter_content(1024):
             if not block:
                 break
-
             handle.write(block)
     return tmp_path
 
@@ -153,13 +150,13 @@ def handler(event, context):
         # write data attributes to image's exif
         new_tags = {
           "Make": "RidgeTec",
-          # "FileName": rt.filename,
           "SerialNumber": rt.imei,
-          "DateTimeOriginal": rt.date_time_created.replace("-", ":")
+          "DateTimeOriginal": rt.date_time_created.replace("-", ":"),
+          "UserComment": f"AccountId={rt.account_id}"
         }
         enrich_exif(img_path, new_tags)
 
-        # TODO: transfer to animl-images-ingestion bucket
+        # TODO: transfer image to ingestion bucket
         print(f"uploading {rt.filename} to {config['INGESTION_BUCKET']}")
         s3.upload_file(img_path, config["INGESTION_BUCKET"], rt.filename)
 
