@@ -2,7 +2,6 @@
 
 import os
 from re import L
-import sys
 import uuid
 from urllib.parse import unquote_plus
 from urllib.parse import urlparse
@@ -22,6 +21,7 @@ EXIFTOOL_PATH = f"{LAMBDA_TASK_ROOT}/exiftool"
 SSM_NAMES = {
     "INGESTION_BUCKET": f"/images/ingestion-bucket-{os.environ['STAGE']}",
 }
+SUPPORTED_MAKES = ['RidgeTec']
 
 s3 = boto3.client("s3")
 
@@ -63,21 +63,19 @@ def enrich_exif(img_path, new_tags):
         except ValueError as err:
             print(f"ValueError: {err}")
         except TypeError as err:
-            print(f"TyoeError: {err}")
+            print(f"TypeError: {err}")
         except ExifToolExecuteError as err:
             print(f"ExifToolExecutionError: {err}")
         except:
             print("An error occured setting tags")
 
-
 def download_img(filename, img_url):
-    print(f"Downloading {filename}")
+    print(f"downloading {filename}")
     tmp_path = f"/tmp/{uuid.uuid4()}_{filename}"
-    print(f"tmp_path: {tmp_path}")
     with open(tmp_path, 'wb') as handle:
         response = requests.get(img_url, stream=True)
         if not response.ok:
-            print(response)
+            raise Exception(f"Error downloading image: {response}") 
         for block in response.iter_content(1024):
             if not block:
                 break
@@ -92,7 +90,19 @@ def get_make(email):
     print(f"make: {make}")
     return make
 
-def getConfig(context, ssm_names=SSM_NAMES):
+def get_email(bucket, key):
+    email_data = s3.get_object(Bucket=bucket, Key=key)
+    email_data = email_data["Body"].read()
+    email_data = codecs.decode(email_data, "quopri")
+    email_parsed = email.message_from_bytes(email_data, policy=policy.default)
+    # TODO: headers still appear to be in quoted-printable encoding! fix!
+    # https://stackoverflow.com/questions/63110730/strange-formatting-of-html-in-ses-mail
+    # print("email parsed from bytes and printed as string: ")
+    # print(email_parsed.as_string())
+    # print(f"keys: {email_parsed.keys()}")
+    return email_parsed
+
+def get_config(context, ssm_names=SSM_NAMES):
     ret = {}
     for key, value in ssm_names.items():
         try:
@@ -113,36 +123,24 @@ def getConfig(context, ssm_names=SSM_NAMES):
 )
 def handler(event, context):
     print("event: {}".format(event))
-    config = getConfig(context)
+    config = get_config(context)
     for record in event["Records"]:
 
         email_bucket = record["s3"]["bucket"]["name"]
         email_key = unquote_plus(record["s3"]["object"]["key"])
-        print(f"New file detected in {email_bucket}: {email_bucket}")
+        print(f"new file detected in {email_bucket}: {email_bucket}")
 
-        # get object from S3, decode, and parse
-        email_data = s3.get_object(Bucket=email_bucket, Key=email_key)
-        email_data = email_data["Body"].read()
-        email_data = codecs.decode(email_data, "quopri")
-        email_parsed = email.message_from_bytes(email_data, policy=policy.default)
-        # TODO: headers still appear to be in quoted-printable encoding! fix!
-        # https://stackoverflow.com/questions/63110730/strange-formatting-of-html-in-ses-mail
-        # print("email parsed from bytes and printed as string: ")
-        # print(email_parsed.as_string())
-        print(f"keys: {email_parsed.keys()}")
+        # get email from S3, decode, and parse
+        msg = get_email(email_bucket, email_key)
 
         # determine make
-        make = get_make(email_parsed)
-        # TODO: if make is 'other', end gracefully
+        make = get_make(msg)
+        if (make not in SUPPORTED_MAKES):
+            raise ValueError(f"unsupported camera make: {make}")
 
         # extract data attributes
         rt = ParseRidgeTec()
-        rt.feed(email_parsed.as_string())
-        print(f"img_url: {rt.img_url}")
-        print(f"filename: {rt.filename}")
-        print(f"date_time_created: {rt.date_time_created}")
-        print(f"imei: {rt.imei}")
-        print(f"account_id: {rt.account_id}")
+        rt.feed(msg.as_string())
 
         # download image to /tmp
         img_path = download_img(rt.filename, rt.img_url)
@@ -156,7 +154,7 @@ def handler(event, context):
         }
         enrich_exif(img_path, new_tags)
 
-        # TODO: transfer image to ingestion bucket
+        # transfer image to ingestion bucket
         print(f"uploading {rt.filename} to {config['INGESTION_BUCKET']}")
         s3.upload_file(img_path, config["INGESTION_BUCKET"], rt.filename)
 
