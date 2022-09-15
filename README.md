@@ -27,12 +27,12 @@ The instructions below assume you have the following tools globally installed:
 - Docker
 - aws-cli
 
-### TODO: Add instructions on how to set up SES rules
-
 ### Create "animl" AWS config profile
 The name of the profile must be "animl", because that's what 
 ```serverles.yml``` will be looking for. Good instructions 
 [here](https://www.serverless.com/framework/docs/providers/aws/guide/credentials/).
+
+*Note: AWS SES only supports email receiving in a [few regions](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/regions.html#region-receive-email).*
 
 ### Make a project direcory and clone this repo
 ```
@@ -41,14 +41,6 @@ cd animl-email-relay
 git clone https://github.com/tnc-ca-geo/animl-email-relay.git
 cd animl-email-relay
 ```
-
-### Create a .env file in the project's root directory with the following variables:
-```
-REGION=us-west-2  # AWS only supports email receiving in a few regions
-AWS_PROFILE=animl
-AWS_ACCOUNT_ID=[your-account-id]
-```
-*Note: AWS SES only supports email receiving in a [few regions](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/regions.html#region-receive-email).*
 
 ### Clone serverless-python-requirements plugin
 This project runs in a Python Lambda environment, which means that all Python 
@@ -92,7 +84,6 @@ source venv/bin/activate
 ### Add dependencies
 ```
 # Example package installs
-pip install pillow
 pip install requests
 pip install PyExifTool
 ```
