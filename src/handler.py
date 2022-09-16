@@ -16,10 +16,12 @@ from exiftool.exceptions import ExifToolExecuteError
 from lambda_cache import ssm
 
 
-LAMBDA_TASK_ROOT = os.environ["LAMBDA_TASK_ROOT"]
+# Use .get so that we don't fail if running tests without environment set
+LAMBDA_TASK_ROOT = os.environ.get('LAMBDA_TASK_ROOT', ' ')
 EXIFTOOL_PATH = f"{LAMBDA_TASK_ROOT}/exiftool"
+STAGE = os.environ.get('STAGE', '')
 SSM_NAMES = {
-    "INGESTION_BUCKET": f"/images/ingestion-bucket-{os.environ['STAGE']}",
+    "INGESTION_BUCKET": f"/images/ingestion-bucket-{STAGE}"
 }
 SUPPORTED_MAKES = ['RidgeTec']
 
@@ -44,7 +46,7 @@ class ParseRidgeTec(HTMLParser):
             elif attr[0] == "data-date-time-created":
                 self.date_time_created = attr[1]
             elif attr[0] == "data-timezone":
-                self.timezone = attr[1]       
+                self.timezone = attr[1]
             elif attr[0] == "data-imei":
                 self.imei = str(attr[1])
             elif attr[0] == "data-account-id":
@@ -75,7 +77,7 @@ def download_img(filename, img_url):
     with open(tmp_path, 'wb') as handle:
         response = requests.get(img_url, stream=True)
         if not response.ok:
-            raise Exception(f"Error downloading image: {response}") 
+            raise Exception(f"Error downloading image: {response}")
         for block in response.iter_content(1024):
             if not block:
                 break
