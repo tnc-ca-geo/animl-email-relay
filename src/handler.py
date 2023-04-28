@@ -26,6 +26,7 @@ SSM_NAMES = {
 SUPPORTED_MAKES = ['RidgeTec', 'CUDDEBACK']
 
 s3 = boto3.client("s3")
+os.environ["PATH"] = "{}:{}/".format(os.environ["PATH"], EXIFTOOL_PATH)
 
 class ParseRidgeTec(HTMLParser):
     def __init__(self):
@@ -53,7 +54,6 @@ class ParseRidgeTec(HTMLParser):
                 self.account_id = str(attr[1])
 
 def enrich_exif(img_path, new_tags):
-    os.environ["PATH"] = "{}:{}/".format(os.environ["PATH"], EXIFTOOL_PATH)
     print(f"setting mew_tags on {img_path}: {new_tags}...")
     with ExifToolHelper() as et:
         try:
@@ -105,6 +105,22 @@ def get_email(bucket, key):
     # print(email_parsed.as_string())
     # print(f"keys: {email_parsed.keys()}")
     return email_parsed
+
+def get_cuddeback_cam_id(file_path):
+    with ExifToolHelper() as et:
+        # for d in et.get_metadata(file_path):
+        #     for k, v in d.items():
+        #         print(f"Dict: {k} = {v}")
+        cam_id = None
+        user_comment = et.get_tags(file_path, ['UserComment'])
+        print(f'user_comment: {user_comment}')
+        user_comments = user_comment[0]['EXIF:UserComment'].split(',')
+        for comment in user_comments:
+            key, value = comment.split('=')
+            # print(f'key: {key} - value: {value}')
+            if key == 'ID': cam_id = value
+        return cam_id
+
 
 def get_config(context, ssm_names=SSM_NAMES):
     ret = {}
@@ -183,6 +199,10 @@ def handler(event, context):
                         img_attachments[f.name] = fn
             for fp, fn in img_attachments.items():
                 print(f'fp from img_attachments: {fp}')
+                # TODO: get camera ID
+                cam_id = get_cuddeback_cam_id(fp)
+                print(f"cam_id: {cam_id}")
+                # TODO: write camera ID to EXIF SerialNumber
                 print(f"uploading {fn} to {config['INGESTION_BUCKET']}")
                 s3.upload_file(fp, config["INGESTION_BUCKET"], fn)
                 os.remove(fp)
