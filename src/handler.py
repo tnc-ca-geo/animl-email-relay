@@ -199,10 +199,12 @@ def handler(event, context):
                         img_attachments[f.name] = fn
             for fp, fn in img_attachments.items():
                 print(f'fp from img_attachments: {fp}')
-                # TODO: get camera ID
+                # get camera ID
                 cam_id = get_cuddeback_cam_id(fp)
                 print(f"cam_id: {cam_id}")
-                # TODO: write camera ID to EXIF SerialNumber
+                # write camera ID to EXIF SerialNumber
+                enrich_exif(fp, {"SerialNumber": cam_id})
+                # upload to S3
                 print(f"uploading {fn} to {config['INGESTION_BUCKET']}")
                 s3.upload_file(fp, config["INGESTION_BUCKET"], fn)
                 os.remove(fp)
