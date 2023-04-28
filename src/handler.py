@@ -1,6 +1,8 @@
 #!/opt/bin/perl
 
 import os
+import mimetypes
+import tempfile
 from re import L
 import uuid
 from urllib.parse import unquote_plus
@@ -21,7 +23,7 @@ EXIFTOOL_PATH = f"{LAMBDA_TASK_ROOT}/exiftool"
 SSM_NAMES = {
     "INGESTION_BUCKET": f"/images/ingestion-bucket-{os.environ['STAGE']}",
 }
-SUPPORTED_MAKES = ['RidgeTec']
+SUPPORTED_MAKES = ['RidgeTec', 'CUDDEBACK']
 
 s3 = boto3.client("s3")
 
@@ -87,6 +89,8 @@ def get_make(email):
     sender = email.get("From")
     if ('ridgetec' in sender):
         make = 'RidgeTec'
+    if ('cuddelink' in sender):
+        make = 'CUDDEBACK'
     print(f"make: {make}")
     return make
 
@@ -137,25 +141,50 @@ def handler(event, context):
         make = get_make(msg)
         if (make not in SUPPORTED_MAKES):
             raise ValueError(f"unsupported camera make: {make}")
+        
+        elif (make == 'RidgeTec'):
+            # extract data attributes
+            rt = ParseRidgeTec()
+            rt.feed(msg.as_string())
 
-        # extract data attributes
-        rt = ParseRidgeTec()
-        rt.feed(msg.as_string())
+            # download image to /tmp
+            img_path = download_img(rt.filename, rt.img_url)
 
-        # download image to /tmp
-        img_path = download_img(rt.filename, rt.img_url)
+            # write data attributes to image's exif
+            new_tags = {
+              "Make": "RidgeTec",
+              "SerialNumber": rt.imei,
+              "DateTimeOriginal": rt.date_time_created.replace("-", ":"),
+              "UserComment": f"AccountId={rt.account_id}"
+            }
+            enrich_exif(img_path, new_tags)
 
-        # write data attributes to image's exif
-        new_tags = {
-          "Make": "RidgeTec",
-          "SerialNumber": rt.imei,
-          "DateTimeOriginal": rt.date_time_created.replace("-", ":"),
-          "UserComment": f"AccountId={rt.account_id}"
-        }
-        enrich_exif(img_path, new_tags)
+            # transfer image to ingestion bucket
+            print(f"uploading {rt.filename} to {config['INGESTION_BUCKET']}")
+            s3.upload_file(img_path, config["INGESTION_BUCKET"], rt.filename)
 
-        # transfer image to ingestion bucket
-        print(f"uploading {rt.filename} to {config['INGESTION_BUCKET']}")
-        s3.upload_file(img_path, config["INGESTION_BUCKET"], rt.filename)
+        elif (make == 'CUDDEBACK'):
+            print('processing CUDDEBACK email')
+            img_attachments = {}
+            for part in msg.iter_attachments():
+                fn = part.get_filename()
+                print(f'found an attachment with filename: {fn}')
+                if fn:
+                    extension = os.path.splitext(part.get_filename())[1]
+                else:
+                    extension = mimetypes.guess_extension(part.get_content_type())
+                print(f'extension: {extension}')
+
+                if extension.casefold() == '.JPG'.casefold():
+                    with tempfile.NamedTemporaryFile(suffix=extension, delete=False) as f:
+                        f.write(part.get_content())
+                        # print(f'part: {part}')
+                        print(f'f.name: {f.name}')
+                        img_attachments[f.name] = fn
+            for fp, fn in img_attachments.items():
+                print(f'fp from img_attachments: {fp}')
+                print(f"uploading {fn} to {config['INGESTION_BUCKET']}")
+                s3.upload_file(fp, config["INGESTION_BUCKET"], fn)
+                os.remove(fp)
 
         # TODO: delete img from /tmp?
