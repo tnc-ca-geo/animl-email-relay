@@ -25,8 +25,10 @@ SSM_NAMES = {
 }
 SUPPORTED_MAKES = ['RidgeTec', 'CUDDEBACK']
 
+
 s3 = boto3.client("s3")
 os.environ["PATH"] = "{}:{}/".format(os.environ["PATH"], EXIFTOOL_PATH)
+
 
 class ParseRidgeTec(HTMLParser):
     def __init__(self):
@@ -108,19 +110,35 @@ def get_email(bucket, key):
 
 def get_cuddeback_cam_id(file_path):
     with ExifToolHelper() as et:
-        # for d in et.get_metadata(file_path):
-        #     for k, v in d.items():
-        #         print(f"Dict: {k} = {v}")
-        cam_id = None
-        user_comment = et.get_tags(file_path, ['UserComment'])
-        print(f'user_comment: {user_comment}')
-        user_comments = user_comment[0]['EXIF:UserComment'].split(',')
-        for comment in user_comments:
-            key, value = comment.split('=')
-            # print(f'key: {key} - value: {value}')
-            if key == 'ID': cam_id = value
+        try: 
+            cam_id = None
+            user_comment = et.get_tags(file_path, ['UserComment'])
+            print(f'user_comment: {user_comment}')
+            user_comments = user_comment[0]['EXIF:UserComment'].split(',')
+            for comment in user_comments:
+                key, value = comment.split('=')
+                # print(f'key: {key} - value: {value}')
+                if key == 'ID': cam_id = value
+        except ExifToolExecuteError as err:
+            print(f"ExifToolExecutionError: {err}")
         return cam_id
 
+def save_attached_images(email_msg):
+    # find attached JPGs
+    img_attachments = {}
+    for part in email_msg.iter_attachments():
+        fn = part.get_filename()
+        if fn:
+            ext = os.path.splitext(part.get_filename())[1]
+        else:
+            ext = mimetypes.guess_extension(part.get_content_type())
+        if ext.casefold() == '.JPG'.casefold():
+            with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as f:
+                f.write(part.get_content())
+                img_attachments[f.name] = fn
+    if len(img_attachments) == 0:
+        print('no image files found')
+    return img_attachments
 
 def get_config(context, ssm_names=SSM_NAMES):
     ret = {}
@@ -155,10 +173,10 @@ def handler(event, context):
 
         # determine make
         make = get_make(msg)
-        if (make not in SUPPORTED_MAKES):
+        if make not in SUPPORTED_MAKES:
             raise ValueError(f"unsupported camera make: {make}")
-        
-        elif (make == 'RidgeTec'):
+
+        elif make == 'RidgeTec':
             # extract data attributes
             rt = ParseRidgeTec()
             rt.feed(msg.as_string())
@@ -178,35 +196,18 @@ def handler(event, context):
             # transfer image to ingestion bucket
             print(f"uploading {rt.filename} to {config['INGESTION_BUCKET']}")
             s3.upload_file(img_path, config["INGESTION_BUCKET"], rt.filename)
+            os.remove(img_path)
 
-        elif (make == 'CUDDEBACK'):
-            print('processing CUDDEBACK email')
-            img_attachments = {}
-            for part in msg.iter_attachments():
-                fn = part.get_filename()
-                print(f'found an attachment with filename: {fn}')
-                if fn:
-                    extension = os.path.splitext(part.get_filename())[1]
-                else:
-                    extension = mimetypes.guess_extension(part.get_content_type())
-                print(f'extension: {extension}')
-
-                if extension.casefold() == '.JPG'.casefold():
-                    with tempfile.NamedTemporaryFile(suffix=extension, delete=False) as f:
-                        f.write(part.get_content())
-                        # print(f'part: {part}')
-                        print(f'f.name: {f.name}')
-                        img_attachments[f.name] = fn
-            for fp, fn in img_attachments.items():
-                print(f'fp from img_attachments: {fp}')
+        elif make == 'CUDDEBACK':
+            img_attachments = save_attached_images(msg)
+            for img_path, fn in img_attachments.items():
                 # get camera ID
-                cam_id = get_cuddeback_cam_id(fp)
-                print(f"cam_id: {cam_id}")
+                cam_id = get_cuddeback_cam_id(img_path)
+                print(f"CUDDEBACK cam_id: {cam_id}")
                 # write camera ID to EXIF SerialNumber
-                enrich_exif(fp, {"SerialNumber": cam_id})
+                if cam_id is not None:
+                    enrich_exif(img_path, {"SerialNumber": cam_id})
                 # upload to S3
                 print(f"uploading {fn} to {config['INGESTION_BUCKET']}")
-                s3.upload_file(fp, config["INGESTION_BUCKET"], fn)
-                os.remove(fp)
-
-        # TODO: delete img from /tmp?
+                s3.upload_file(img_path, config["INGESTION_BUCKET"], fn)
+                os.remove(img_path)
