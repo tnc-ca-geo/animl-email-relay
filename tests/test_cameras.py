@@ -11,6 +11,12 @@ import cameras
 from tests import examples
 
 
+class TestBaseCamera(TestCase):
+    """
+    Not much to test here, skip that in the sake of time.
+    """
+
+
 class TestRidgetecCamera(TestCase):
 
     def test_evaluate_make(self):
@@ -44,3 +50,15 @@ class TestRidgetecCamera(TestCase):
         download_image.assert_called_once()
         download_image.assert_called_with(
             'an_image.jpg', 'https://web.org/images/an_image.jpg')
+
+
+class TestCuddebackCamera(TestCase):
+
+    def test_evaluate_make(self):
+        camera = cameras.CuddebackCamera(examples.CUDDEBACK_EMAIL)
+        self.assertTrue(camera.evaluate_make())
+        camera = cameras.CuddebackCamera(examples.OTHER_EMAIL)
+        self.assertFalse(camera.evaluate_make())
+
+    # add additional tests
+

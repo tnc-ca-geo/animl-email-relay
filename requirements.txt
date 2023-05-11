@@ -9,9 +9,3 @@ PyExifTool==0.5.4
 requests==2.28.1
 urllib3==1.26.12
 boto3==1.24.75
-# Test requirements. pytest is a common test trunner, in a SAM environment you
-# might have a different requirements.txt files one for your local (test)
-# environment and one for AWS Lambda. Not sure how to do that in serverless but
-# it will not hurt to install that in Lambda as well.
-pytest
-pillow==9.5.0

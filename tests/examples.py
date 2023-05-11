@@ -23,6 +23,8 @@ RIDGETEC_EMAIL_BODY = (
 RIDGETEC_EMAIL = EmailMessage()
 RIDGETEC_EMAIL['From'] ='An email from ridgetec'
 RIDGETEC_EMAIL['Body'] = RIDGETEC_EMAIL_BODY
+CUDDEBACK_EMAIL = EmailMessage()
+CUDDEBACK_EMAIL['From'] = 'An email from cuddelink'
 OTHER_EMAIL = EmailMessage()
 OTHER_EMAIL['From'] = 'Another message'
 
