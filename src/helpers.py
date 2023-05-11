@@ -1,3 +1,4 @@
+# pylint:disable=E0401,W0511,W0718
 """
 This module contains generic helper functions with storage and cloud side
 effects. Please use to build camera specific classes in makes.py.
@@ -7,9 +8,7 @@ import codecs
 import email
 import email.policy
 import os
-import quopri
 import tempfile
-import uuid
 # third party
 from exiftool import ExifToolHelper
 from exiftool.exceptions import ExifToolExecuteError
@@ -47,26 +46,43 @@ def get_email_from_s3(bucket, key):
     return email.message_from_bytes(email_data, policy=email.policy.default)
 
 
-def get_exif(image):
+def get_exif(image_path):
+    """
+    Read Exif data from image file.
+
+    Args:
+        image_path(str): Path of an image file.
+    Returns:
+        list
+    """
     with ExifToolHelper() as exif_tool:
         try:
-            return exif_tool.get_metadata(image)
+            return exif_tool.get_metadata(image_path)
         except ExifToolExecuteError as err:
             print(f'ExifToolExecutionError: {err}')
             return []
 
 
-def enrich_exif(img_path, new_tags):
-    print(f'setting new_tags on {img_path}: {new_tags}...')
+def enrich_exif(image_path, new_tags):
+    """
+    Enrich existing image file with additional data.
+
+    Args:
+        image_path(str): Path of an image file.
+        new_tags(dict): A dictionary of tags and values.
+    Returns:
+        None
+    """
+    print(f'Setting new_tags on {image_path}: {new_tags}...')
     with ExifToolHelper() as exif_tool:
         try:
             exif_tool.set_tags(
-                img_path, tags=new_tags,
+                image_path, tags=new_tags,
                 params=['-P', '-overwrite_original_in_place'])
         except (ValueError, TypeError, ExifToolExecuteError) as err:
             print(f'{err.__class__.__name__}: {err}')
-        except:
-            print('An error occured setting tags')
+        except Exception as error:
+            print('An error occured setting tags:', error)
 
 
 def download_image(filename, img_url):

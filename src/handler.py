@@ -1,20 +1,19 @@
+"""
+A Lambda function retrieving camera images and metadata from incoming
+emails.
+"""
 #!/opt/bin/perl
 # the above is odd; TODO: remove
-# pylint:disable=E0401
+# pylint:disable=E0401,W0718
 # standard library
-import mimetypes
 import os
-import tempfile
 from urllib.parse import unquote_plus
 # third party
 import boto3
 from lambda_cache import ssm
-from exiftool import ExifToolHelper
-from exiftool.exceptions import ExifToolExecuteError
 # project
 import cameras
 import helpers
-import parsers
 
 
 # Use .get so that test don't fail if environment is not set
@@ -56,7 +55,7 @@ def get_config(context, ssm_names=None):
                 raise ValueError(value)
         except ValueError as err:
             print(f'SSM name \'{err}\' was not found')
-        except:
+        except Exception:
             print('An error occured fetching remote config')
     return ret
 
@@ -89,7 +88,7 @@ def handler(event, context):
             if camera.evaluate_make():
                 break
         for image in camera.images():
-            directory, filename = os.path.split(image)
+            _, filename = os.path.split(image)
             print(
                 f'Uploading {image} as {filename} '
                 f'to {config["INGESTION_BUCKET"]}.')

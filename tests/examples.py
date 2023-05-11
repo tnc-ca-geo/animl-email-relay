@@ -1,3 +1,4 @@
+# pylint:disable=C0114,E0401
 # standard library
 from email.message import EmailMessage
 import io

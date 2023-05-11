@@ -1,11 +1,8 @@
+# pylint:disable=E0401
 """
-Implement cameras as subclass from a BaseCameraClass containing all camera
-specific code.
+Implement cameras as subclass of BaseCamera class. Camera specific code should
+be contained to these classes.
 """
-# standard library
-import uuid
-# third party
-import requests
 # project
 import helpers
 import parsers
@@ -52,7 +49,7 @@ class BaseCamera():
         """
         return {}
 
-    def format_and_merge_exif_data(self, metadata, extra_data=None):
+    def format_and_merge_exif_data(self, extra_data=None):
         """
         Format the data that will be added to exif.
         """
@@ -60,7 +57,7 @@ class BaseCamera():
 
     def get_extra_exif(self, image):
         """
-        This is a wrapper around reading exif data. If we don't need to read
+        Wrapper around reading exif data. If we don't need to read
         existing data, we can just return an empty dict.
 
         Args:
@@ -68,6 +65,7 @@ class BaseCamera():
         Returns:
             dict
         """
+        del image
         return {}
 
     def get_images(self):
@@ -114,8 +112,7 @@ class RidgetecCamera(BaseCamera):
             'SerialNumber': self.metadata.get('imei'),
             'DateTimeOriginal': self.metadata.get(
                 'date_time_created', '').replace('-', ':'),
-            'UserComment': f'AccountId={self.metadata.get("account_id")}'
-        }
+            'UserComment': f'AccountId={self.metadata.get("account_id")}'}
 
     def get_images(self):
         filename = self.metadata.get('filename')

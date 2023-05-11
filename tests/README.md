@@ -1,33 +1,35 @@
-## Run tests
+## Unit tests
 
-### 1. Install nose
+I switched to using pytest as testrunner since nobodody seems to use
+Nose anymore. It has not been maintained for awhile. But, I am sticking
+to the mocking capabilities of the Python unittest library so any Python
+testrunner should work. So there should not be any functionality or fixtures
+specific to pytest. See https://docs.pytest.org/en/7.3.x/
 
-```pip install nose```
+### 1. Install Pytest
+
+```pip install pytest```
 
 ### 2. Run tests
 
 From the project directory ```animl-email-relay```
 
-```nosetests```
+```pytest```
 
 Show the output of print statements
 
-```nosetests -s```
+```pytest -s```
 
 Run specific test file
 
-```nosetests -s tests.test_handler```
+```pytest tests/test_handler.py```
 
 Run specific TestCase
 
-```nosetests -s tests.test_handler:ExampleTestCase```
+```pytest tests/test_handler.py::TestFullHandler```
 
 Run specific test
 
-```nosetests -s tests.test_handler:ExampleTestCase.test_example```
-
-I am using the standard library unittest. There are more fancy approaches, that
-help with setting up mocked environments or provide packet specific assertion
-and object construction methods. In our context
-https://botocore.amazonaws.com/v1/documentation/api/latest/reference/stubber.html
-is very interesting.
+```
+pytest tests.test_handler::TestFullHandler.test_handler_ridgetectest_example
+```

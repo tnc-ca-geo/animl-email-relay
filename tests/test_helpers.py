@@ -6,7 +6,6 @@ import io
 import os
 import sys
 from unittest import mock, TestCase
-import uuid
 # third party
 from exiftool import ExifToolHelper
 from PIL import Image

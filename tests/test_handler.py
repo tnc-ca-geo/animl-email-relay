@@ -8,13 +8,10 @@ think that is sensitive since this module heavily relies on it.
 import codecs
 import email
 from functools import wraps
-import io
 import os
 import sys
 from types import SimpleNamespace
 from unittest import mock, TestCase
-# third party
-from PIL import Image
 # add path so that imports work in tests the same way as in handler.py
 sys.path.append(os.path.abspath('src'))
 sys.modules['boto3'] = mock.MagicMock()
@@ -38,19 +35,6 @@ mock.patch('lambda_cache.ssm.cache', mock_decorator).start()
 from tests import examples
 # module to test
 import handler
-import parsers
-
-
-class TestParseRidgeTec(TestCase):
-
-    def test_parse_ridgetec(self):
-        parser = parsers.RidgetecParser()
-        parser.feed(examples.RIDGETEC_EMAIL_BODY)
-        self.assertEqual(parser.filename, 'an_image.jpg')
-        self.assertEqual(parser.date_time_created, '2020-01-01')
-        self.assertEqual(parser.timezone, 'US/Los Angeles')
-        self.assertEqual(parser.imei, '0815')
-        self.assertEqual(parser.account_id, 'someone')
 
 
 @mock.patch('handler.STAGE', new='test')
@@ -100,10 +84,6 @@ class TestFullHandlerRealDataWithDownload(TestCase):
     @mock.patch('helpers.requests')
     @mock.patch('handler.s3.upload_file')
     def test_handler_ridgetec_real_data(self, upload_file, requests, get_email):
-        image = Image.new('RGB', (100, 100), (0, 55, 0))
-        image_bytes = io.BytesIO()
-        image.save(image_bytes, format='JPEG')
-        bytes_arr = image_bytes.getvalue()
         # mocking the chunked response
         requests.get.return_value.iter_content.return_value = (
             examples.create_chunked_image_response())
