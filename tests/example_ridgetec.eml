@@ -1,0 +1,229 @@
+Return-Path: <01000187e2e65e8f-24469eb3-5b1e-4bf6-a95b-327a8f8eb4e7-000000@mail.ridgetec.com>
+Received: from a8-77.smtp-out.amazonses.com (a8-77.smtp-out.amazonses.com [54.240.8.77])
+ by inbound-smtp.us-west-2.amazonaws.com with SMTP id 1eiq3qunv90325aeub2igif7vofq9if4iu902fo1
+ for animl@codefornature.org;
+ Wed, 03 May 2023 18:36:02 +0000 (UTC)
+X-SES-Spam-Verdict: PASS
+X-SES-Virus-Verdict: PASS
+Received-SPF: pass (spfCheck: domain of mail.ridgetec.com designates 54.240.8.77 as permitted sender) client-ip=54.240.8.77; envelope-from=01000187e2e65e8f-24469eb3-5b1e-4bf6-a95b-327a8f8eb4e7-000000@mail.ridgetec.com; helo=a8-77.smtp-out.amazonses.com;
+Authentication-Results: amazonses.com;
+ spf=pass (spfCheck: domain of mail.ridgetec.com designates 54.240.8.77 as permitted sender) client-ip=54.240.8.77; envelope-from=01000187e2e65e8f-24469eb3-5b1e-4bf6-a95b-327a8f8eb4e7-000000@mail.ridgetec.com; helo=a8-77.smtp-out.amazonses.com;
+ dkim=pass header.i=@amazonses.com;
+ dkim=pass header.i=@ridgetec.com;
+ dmarc=pass header.from=ridgetec.com;
+X-SES-RECEIPT: AEFBQUFBQUFBQUFGZFJVMlducnRDS0Yvd3F2aHhzcS9iNkRVSktraVFpRVZNTFE1aE5lSitEcjU4bmcwelhoUVUyREpPSkcvUFF0eGcrRjFBaStMN01xM0J1amVVcEt4aWxPeXlGR2tBcnRhUHRRc21yNW85bEJrRTJTMTBROEJreDJNUVpVaGNtTmwxQ1k2UHk0TGV6QWVyZGx6UjQvWWFwb29EaWtNQ2tqVGU0VURWSFljZ0YzczJHWnpXcWNDQ3QvVmNLZTd3cWJCSDZkR0Q4UHpLaStFZlNJcDVVOGZrNlgwbDVURVBQY1BMeFB0amp1eFZ3OU5pdWtVUHBQYzNqKzhsU3FtVlgvNnQ0cVZnQzZEN04rTW5jTUtQTURwaHZFcjcrUjdnY3Z6eEZ4Wm1DUXpWdDlrRXdKdDNkWCtKQ1lzRkhqeGdMQVNFczFvaVpFakdYejd4eG8wN3NhMmR0S3pPU1pMVFF1S2VzN0tucU45VWxkWUVJZk9xR0U4SVhwVms1NEpWRUxFPQ==
+X-SES-DKIM-SIGNATURE: a=rsa-sha256; q=dns/txt; b=UhEhPlrd74ZlelWr2+BjYSkfQdsJAkk9+r+n219iPTo/inuJZIwfadPSGYJS+hehOVDzehb7KKCQQ+B3yFFlA6B7sMggcLtN0coKcY8z1Y2AZtgqJpgeUeX5SWFsLhZqENJIHB8aTKYdhh6MYU5rxiXBg+GttbT0FhpVfhhI5a0=; c=relaxed/simple; s=hsbnp7p3ensaochzwyq5wwmceodymuwv; d=amazonses.com; t=1683138962; v=1; bh=qvAkyWL8nHMZnf4VvCzgH0cz1kMJZYo9sAP0Tguy4PQ=; h=From:To:Cc:Bcc:Subject:Date:Message-ID:MIME-Version:Content-Type:X-SES-RECEIPT;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=l7ow6m5tla6l2peayataellzuemntvx2; d=ridgetec.com; t=1683138961;
+	h=Message-ID:Date:Subject:From:To:MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=qvAkyWL8nHMZnf4VvCzgH0cz1kMJZYo9sAP0Tguy4PQ=;
+	b=lcZCk+tB0Hm0c9KWLbm9KJMHhR/abBmIBx3d6zznP9aL+RwPrsonZxE3qNDbkek1
+	oWt63OcQOO7klC6ROKwKak3jljY7OxTgClsYDEHO09/3P4/IE2wUSd5nv8iu2Yva5Kl
+	Ix/fQyWEcbRoY4JkUVQd3mkfwpSLjT//5/XSOhsU=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=224i4yxa5dv7c2xz3womw6peuasteono; d=amazonses.com; t=1683138961;
+	h=Message-ID:Date:Subject:From:To:MIME-Version:Content-Type:Content-Transfer-Encoding:Feedback-ID;
+	bh=qvAkyWL8nHMZnf4VvCzgH0cz1kMJZYo9sAP0Tguy4PQ=;
+	b=USh4UqEMSAzRvQRssqD1y3mUE7lohrSl7LorUhGy2FHIVd4yw7bAm7UZNUNg12ko
+	qbiB0lYkIIQgQPujDgNkemYaUjXP2MnIaPdBoGdEL6h3x1Nm6FiXs+7hfwQD1zFVD4+
+	mAzTEnTnyf9ootoE1C24ENSdya2D8/o5l+NpDRAY=
+Message-ID: <01000187e2e65e8f-24469eb3-5b1e-4bf6-a95b-327a8f8eb4e7-000000@email.amazonses.com>
+Date: Wed, 3 May 2023 18:36:01 +0000
+Subject: NPS HQ
+From: no-reply@ridgetec.com
+To: animl@codefornature.org
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Feedback-ID: 1.us-east-1.8WeZUvx9uMGGhyZZYD9Dl3W/Spopa5akk0ZX4WC0CeA=:AmazonSES
+X-SES-Outgoing: 2023.05.03-54.240.8.77
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name=3D"viewport" content=
+=3D"width=3Ddevice-width, initial-scale=3D1.0" />
+    <meta http-equiv=3D=
+"Content-Type" content=3D"text/html; charset=3DUTF-8" />
+
+    <style ty=
+pe=3D"text/css" rel=3D"stylesheet" media=3D"all">
+        /* Media Querie=
+s */
+        @media  only screen and (max-width: 500px) {
+            .=
+button {
+                width: 100% !important;
+            }
+      =
+  }
+    </style>
+</head>
+
+
+
+<body style=3D"margin: 0; padding: =
+0; width: 100%; background-color: #F2F4F6;">
+    <table width=3D"100%" ce=
+llpadding=3D"0" cellspacing=3D"0">
+        <tr>
+            <td style=
+=3D"width: 100%; margin: 0; padding: 0; background-color: #F2F4F6;" align=
+=3D"center">
+                <table width=3D"100%" cellpadding=3D"0" cell=
+spacing=3D"0">
+                    <!-- Logo -->
+                    <t=
+r>
+                        <td style=3D"padding: 25px 0; text-align: cent=
+er;">
+                            <a style=3D"font-family: Arial, &#039;H=
+elvetica Neue&#039;, Helvetica, sans-serif; font-size: 16px; font-weight: b=
+old; color: #2F3133; text-decoration: none; text-shadow: 0 1px 0 white;" hr=
+ef=3D"https://api.ridgetec.com" target=3D"_blank">
+                      =
+          RidgeTec Portal
+                            </a>
+            =
+            </td>
+                    </tr>
+
+                    <!--=
+ Email Body -->
+                    <tr>
+                        <td st=
+yle=3D"width: 100%; margin: 0; padding: 0; border-top: 1px solid #EDEFF2; b=
+order-bottom: 1px solid #EDEFF2; background-color: #FFF;" width=3D"100%">=
+
+                            <table style=3D"width: auto; max-width: 570p=
+x; margin: 0 auto; padding: 0;" align=3D"center" width=3D"570" cellpadding=
+=3D"0" cellspacing=3D"0">
+                                <tr>
+        =
+                            <td style=3D"font-family: Arial, &#039;Helvetic=
+a Neue&#039;, Helvetica, sans-serif; padding: 35px;">
+                   =
+                     <!-- Greeting -->
+                                  =
+      <h1 style=3D"margin-top: 0; color: #2F3133; font-size: 19px; font-wei=
+ght: bold; text-align: left;">
+                                          =
+  <p>This email was generated by the RidgeTec Portal for <br />
+         =
+                                       camera NPS HQ owned by Nathaniel Rin=
+dlaub
+                                        </h1>
+
+                =
+                        <!-- Intro -->
+                                  =
+    =20
+                                            <p style=3D"margin-top:=
+ 0; color: #74787E; font-size: 16px; line-height: 1.5em;">
+              =
+                                  DO NOT REPLY TO THIS EMAIL.  THIS MAIL BO=
+X IS NOT MONITORED.=20
+                                            </p>
+=
+
+                                           =20
+                         =
+               <p>
+                                            <a href=3D=
+"https://portal.ridgetec.com/viewemailphoto/?param=3DKixhFUj3HQA1VGA4ZGAx6F=
+xqD4r" target=3D"_blank">
+                                               =
+ <img=20
+                                                        data-image=
+type=3D"External"
+                                                       =
+ data-date-time-created=3D"2023-05-03 11:12:34"
+                         =
+                               data-timezone=3D"America/Los_Angeles"
+    =
+                                                    data-imei=3D"8648390466=
+85588"
+                                                        data-accou=
+nt-id=3D"4297"
+src=3D"https://ridgetec-prod.s3.amazonaws.com/camera_media/53852545.JPG?X-Amz=
+-Content-Sha256=3DUNSIGNED-PAYLOAD&X-Amz-Algorithm=3DAWS4-HMAC-SHA256&X-Amz=
+-Credential=3DAKIATBCUNEOIYIQ3ZWVI%2F20230503%2Fus-east-1%2Fs3%2Faws4_reque=
+st&X-Amz-Date=3D20230503T183600Z&X-Amz-SignedHeaders=3Dhost&X-Amz-Expires=
+=3D604800&X-Amz-Signature=3De4e59f0cb870334c8dba49427818da7b3b0d0c7b591bf13=
+ec5ee3d953c78257f"=20
+                                                     =
+   width=3D"360"
+                                                    >
+=
+                                            </a>
+                        =
+                </p>
+                                   =20
+
+          =
+                              <!-- Outro -->
+                            =
+           =20
+                                            <p style=3D"marg=
+in-top: 0; color: #74787E; font-size: 16px; line-height: 1.5em;">
+       =
+                                         Click this link to stop the site f=
+rom sending any emails to your address:<br />
+                           =
+                     <a href=3D"https://portal.ridgetec.com/email/optout">=
+
+                                                    Change Email Prefere=
+nce and Opt Out
+                                                </a>     =
+                                          =20
+                             =
+               </p>
+
+                                    </td>
+      =
+                          </tr>
+                            </table>
+  =
+                      </td>
+                    </tr>
+
+              =
+      <!-- Footer -->
+                    <tr>
+                        =
+<td>
+                            <table style=3D"width: auto; max-width: =
+570px; margin: 0 auto; padding: 0; text-align: center;" align=3D"center" wi=
+dth=3D"570" cellpadding=3D"0" cellspacing=3D"0">
+                        =
+        <tr>
+                                    <td style=3D"font-family=
+: Arial, &#039;Helvetica Neue&#039;, Helvetica, sans-serif; color: #AEAEAE;=
+ padding: 35px; text-align: center;">
+                                   =
+     <p style=3D"margin-top: 0; color: #74787E; font-size: 12px; line-heigh=
+t: 1.5em;">
+                                            &copy; 2023
+   =
+                                         <a style=3D"color: #3869D4;" href=
+=3D"https://api.ridgetec.com" target=3D"_blank">RidgeTec Portal</a>.
+    =
+                                        All rights reserved.
+            =
+                            </p>
+                                    </td=
+>
+                                </tr>
+                            </t=
+able>
+                        </td>
+                    </tr>
+       =
+         </table>
+            </td>
+        </tr>
+    </table>
+</bo=
+dy>
+</html>

@@ -7,9 +7,7 @@ Lambda service for extracting images from wireless camera trap emails
 - Animl API               http://github.com/tnc-ca-geo/animl-api
 - Animl frontend          http://github.com/tnc-ca-geo/animl-frontend
 - Animl base program      http://github.com/tnc-ca-geo/animl-base
-- Animl ingest function   http://github.com/tnc-ca-geo/animl-ingest
 - Animl ML resources      http://github.com/tnc-ca-geo/animl-ml
-- Animl desktop app       https://github.com/tnc-ca-geo/animl-desktop
 
 ## About
 animl-email-relay is a lambda function that is triggerd when an email is 
@@ -18,6 +16,7 @@ To set up email recieving on SES, follow the instructions [here](https://docs.aw
 
 Currently, the handler supports emails coming from the following camera makers:
 - [RidgeTec Lookout 4G LTE](https://www.trailcampro.com/products/ridgetec-lookout-4g-lte)
+- [Cuddeback Cuddelink Cell](https://www.cuddeback.com/cuddelink)
 
 ## Setup
 

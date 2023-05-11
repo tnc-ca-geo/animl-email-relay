@@ -1,76 +1,120 @@
+# pylint:disable=E0401,C0115,C0116,C0413,R1732,W0613
 """
-Tests for src/handler.py
+Tests for src/handler.py. Even though unit tests should generally not depend on
+a specific environment, we are relying here on exiftools being installed. I
+think that is sensitive since this module heavily relies on it.
 """
 # standard library
+import codecs
+import email
+from functools import wraps
 import io
+import os
+import sys
+from types import SimpleNamespace
 from unittest import mock, TestCase
 # third party
-import boto3
+from PIL import Image
+# add path so that imports work in tests the same way as in handler.py
+sys.path.append(os.path.abspath('src'))
+sys.modules['boto3'] = mock.MagicMock()
+# this is a huge disadvantage of using third party decorators with side effects
+# they need to be patched away for the tests to work. The below mock_decorator
+# just does nothing. Alternatively we could also return the desired context.
+# see https://dev.to/stack-labs/how-to-mock-a-decorator-in-python-55jc
+def mock_decorator(*args, **kwargs):
+    """
+    Decorate by doing nothing.
+    """
+    def decorator(function):
+        @wraps(function)
+        def decorated_function(*args, **kwargs):
+            return function(*args, **kwargs)
+        return decorated_function
+    return decorator
+# patch decorators
+mock.patch('lambda_cache.ssm.cache', mock_decorator).start()
+# testdata
+from tests import examples
 # module to test
-from src import handler
+import handler
+import parsers
 
 
-# just stuff I am testing below
-class UselessException(Exception):
-    pass
+class TestParseRidgeTec(TestCase):
 
-# this is just an example to test, it would fail in real life since the bucket
-# does not exist, but mocking is the point here
-def get_s3_object():
-    s3 = boto3.client('s3')
-    response = s3.get_object(Bucket='not_reachable', Key='foo')
-    return response.get('Body').read()
-
-
-def i_will_raise_an_exception():
-    raise UselessException('I am a failure')
-# ----------------------------------------------
-
-# Testcase class need to have the word Test in them
-class ExampleTestCase(TestCase):
-
-    def __setUp__(self):
-        # run some code before all the test methods in that class
-        pass
-
-    def __tearDown__(self):
-        # run some code to clean up after all test methods in the class
-        pass
-
-    # test methods have to have the word test in them to be picked up by the
-    # test runner
-    def test_example(self):
-        test_data = 1.1
-        expected = 1
-        # see here for all assertion methods in the unitest module
-        # https://docs.python.org/3/library/unittest.html
-        self.assertEqual(int(test_data), expected)
+    def test_parse_ridgetec(self):
+        parser = parsers.RidgetecParser()
+        parser.feed(examples.RIDGETEC_EMAIL_BODY)
+        self.assertEqual(parser.filename, 'an_image.jpg')
+        self.assertEqual(parser.date_time_created, '2020-01-01')
+        self.assertEqual(parser.timezone, 'US/Los Angeles')
+        self.assertEqual(parser.imei, '0815')
+        self.assertEqual(parser.account_id, 'someone')
 
 
-class ExampleMockTestCase(TestCase):
+@mock.patch('handler.STAGE', new='test')
+@mock.patch('helpers.get_email_from_s3')
+@mock.patch('helpers.requests')
+@mock.patch('handler.s3.upload_file')
+class TestFullHandler(TestCase):
 
-    @mock.patch('boto3.client')
-    def test_s3(self, client):
-        # This initializes a mocked class, that will not call out to s3
-        s3 = client.return_value
-        # This mocks a method on that class
-        # remove all attribute that are not required in your test
-        s3.get_object.return_value = {
-            'ResponseMetadata': {
-                'HTTPStatusCode': 200,
-                'HTTPHeaders': {}
-            },
-            'Metadata': {},
-            # io.Bytes creates a stream object with a .read() method
-            # if your really need an image you can use pillow to create one
-            'Body': io.BytesIO(b'some binary data')
-        }
-        self.assertEqual(get_s3_object(), b'some binary data')
-        s3.get_object.assert_called_with(Bucket='not_reachable', Key='foo')
+    def test_handler_ridgetec(self, upload_file, download_img, get_email):
+        fake_message = email.message.EmailMessage()
+        fake_message['From'] = 'A message from ridgetec'
+        fake_message['Body'] = examples.RIDGETEC_EMAIL_BODY
+        get_email.return_value = fake_message
+        context = SimpleNamespace(
+            config={'ingestion-bucket-': 's3://test_bucket'})
+        handler.handler(examples.EVENT, context)
+        upload_file.assert_called_with(
+            mock.ANY, 's3://test_bucket', 'an_image.jpg')
+
+    def test_handler_unsupported(self, upload_file, download_img, get_email):
+        fake_message = email.message.EmailMessage()
+        fake_message['From'] = 'Nothing here'
+        get_email.return_value = fake_message
+        with self.assertRaises(NotImplementedError):
+            handler.handler(examples.EVENT, SimpleNamespace())
+
+    def test_handler_cuddeback_real_data(
+                self, upload_file, download_img, get_email
+        ):
+        with open('tests/example_cuddelink.eml', 'rb') as message_bytes:
+            eml = codecs.decode(message_bytes.read(), 'quopri')
+            get_email.return_value = email.message_from_bytes(
+                eml, policy=email.policy.default)
+        context = SimpleNamespace(
+            config={'ingestion-bucket-': 's3://test_bucket'})
+        handler.handler(examples.EVENT, context)
+        upload_file.assert_called_with(
+            mock.ANY, 's3://test_bucket', 'T_00001.JPG')
+        # path = upload_file.call_args.args[0]
+        # add additional assertions?
 
 
-class ExampleExceptionTestCase(TestCase):
+class TestFullHandlerRealDataWithDownload(TestCase):
 
-    def test_fail(self):
-        with self.assertRaises(UselessException):
-            i_will_raise_an_exception()
+    @mock.patch('handler.STAGE', new='test')
+    @mock.patch('helpers.get_email_from_s3')
+    @mock.patch('helpers.requests')
+    @mock.patch('handler.s3.upload_file')
+    def test_handler_ridgetec_real_data(self, upload_file, requests, get_email):
+        image = Image.new('RGB', (100, 100), (0, 55, 0))
+        image_bytes = io.BytesIO()
+        image.save(image_bytes, format='JPEG')
+        bytes_arr = image_bytes.getvalue()
+        # mocking the chunked response
+        requests.get.return_value.iter_content.return_value = (
+            examples.create_chunked_image_response())
+        requests.get.return_value.ok = True
+        with open('tests/example_ridgetec.eml', 'rb') as message_bytes:
+            eml = codecs.decode(message_bytes.read(), 'quopri')
+            get_email.return_value = email.message_from_bytes(
+                eml, policy=email.policy.default)
+        context = SimpleNamespace(
+            config={'ingestion-bucket-': 's3://test_bucket'})
+        handler.handler(examples.EVENT, context)
+        upload_file.assert_called_with(
+           mock.ANY, 's3://test_bucket', '53852545.JPG')
+        # finish this test by adding assertions
