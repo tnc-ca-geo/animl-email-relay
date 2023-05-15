@@ -2,8 +2,6 @@
 A Lambda function retrieving camera images and metadata from incoming
 emails.
 """
-#!/opt/bin/perl
-# the above is odd; TODO: remove
 # pylint:disable=E0401,W0718
 # standard library
 import os
