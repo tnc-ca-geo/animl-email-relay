@@ -71,11 +71,12 @@ class BaseCamera():
     def get_images(self):
         """
         Get images by downloading or extracting them from an email. The
-        implementation must return a tuple of two strings. The first should
-        contains the temporary path, the second the filename to be stored in s3.
+        implementation must return a string that represents the temporary file.
+        The filename, i.e. the last part of the path, will be the filename that
+        will be used to store the image in the Animl ingestion S3 bucket.
 
         Returns:
-            tuple(str, str)
+            str
         """
         raise NotImplementedError('Camera make not implemented.')
 
