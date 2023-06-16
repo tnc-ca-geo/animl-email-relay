@@ -139,6 +139,7 @@ class CuddebackCamera(BaseCamera):
         ret = {}
         extra_data = [{}] if not extra_data else extra_data
         parts = extra_data[0].get('EXIF:UserComment', '').split(',')
+        cam_id = None
         for part in parts:
             key, value = part.split('=')
             if key == 'ID':
