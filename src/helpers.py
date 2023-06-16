@@ -9,6 +9,7 @@ import email
 import email.policy
 import os
 import tempfile
+import mimetypes
 # third party
 from exiftool import ExifToolHelper
 from exiftool.exceptions import ExifToolExecuteError
@@ -123,9 +124,15 @@ def save_attached_images(email_msg):
     tmp_directory = tempfile.mkdtemp()
     for part in email_msg.iter_attachments():
         filename = os.path.join(tmp_directory, part.get_filename())
-        with open(filename, 'wb') as handle:
-            handle.write(part.get_content())
-            img_attachments.append(filename)
+        print(f'save_attached_images - tmp filename: {filename}')
+        if filename:
+            ext = os.path.splitext(filename)[1]
+        else:
+            ext = mimetypes.guess_extension(part.get_content_type())
+        if ext.casefold() == '.JPG'.casefold():
+            with open(filename, 'wb') as handle:
+                handle.write(part.get_content())
+                img_attachments.append(filename)
     if len(img_attachments) == 0:
         print('No image files found.')
     return img_attachments

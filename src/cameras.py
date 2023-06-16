@@ -86,7 +86,9 @@ class BaseCamera():
         """
         for image in self.get_images():
             extra_exif = self.get_extra_exif(image)
+            print(f'extra_exif: {extra_exif}')
             exif_data = self.format_and_merge_exif_data(extra_data=extra_exif)
+            print(f'exif_data: {exif_data}')
             helpers.enrich_exif(image, exif_data)
             yield image
 
