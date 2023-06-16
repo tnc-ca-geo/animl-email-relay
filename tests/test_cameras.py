@@ -36,7 +36,7 @@ class TestRidgetecCamera(TestCase):
     def test_format_exifdata(self):
         camera = cameras.RidgetecCamera(examples.RIDGETEC_EMAIL)
         self.assertEqual(
-            camera.format_and_merge_exif_data(extra_data=None), {
+            camera.prep_new_tags(existing_exif=None), {
             'Make': 'RidgeTec', 'SerialNumber': '0815',
             'DateTimeOriginal': '2020:01:01',
             'UserComment': 'AccountId=someone'})
