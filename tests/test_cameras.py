@@ -27,7 +27,7 @@ class TestRidgetecCamera(TestCase):
 
     def test_parse_metadata(self):
         camera = cameras.RidgetecCamera(examples.RIDGETEC_EMAIL)
-        self.assertEqual(camera.get_metadata(), {
+        self.assertEqual(camera.get_additional_metadata(), {
             'filename': 'an_image.jpg',
             'img_url': 'https://web.org/images/an_image.jpg',
             'imei': '0815', 'date_time_created': '2020-01-01',

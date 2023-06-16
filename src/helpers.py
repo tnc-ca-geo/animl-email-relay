@@ -56,9 +56,9 @@ def get_exif(image_path):
     Returns:
         list
     """
-    with ExifToolHelper() as exif_tool:
+    with ExifToolHelper() as exiftool:
         try:
-            return exif_tool.get_metadata(image_path)
+            return exiftool.get_metadata(image_path)
         except ExifToolExecuteError as err:
             print(f'ExifToolExecutionError: {err}')
             return []
@@ -75,6 +75,8 @@ def enrich_exif(image_path, new_tags):
         None
     """
     print(f'Setting new_tags on {image_path}: {new_tags}...')
+    if not new_tags:
+        return
     with ExifToolHelper() as exif_tool:
         try:
             exif_tool.set_tags(

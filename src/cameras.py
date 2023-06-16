@@ -24,7 +24,7 @@ class BaseCamera():
             email(an email object): As defined in standard library email module.
         """
         self.email = email
-        self.metadata = self.get_metadata()
+        self.metadata = self.get_additional_metadata()
 
     def __str__(self):
         """
@@ -43,19 +43,19 @@ class BaseCamera():
         """
         return True
 
-    def get_metadata(self):
+    def get_additional_metadata(self):
         """
-        Extract metadata from image email.
+        Extract additional metadata from emails' body, subject line, etc.
         """
         return {}
 
-    def format_and_merge_exif_data(self, extra_data=None):
+    def prep_new_tags(self, extra_data=None):
         """
-        Format the data that will be added to exif.
+        Format the new data that will be added to the images' exif
         """
         raise NotImplementedError('Not Implemented')
 
-    def get_extra_exif(self, image):
+    def get_exif(self, image):
         """
         Wrapper around reading exif data. If we don't need to read
         existing data, we can just return an empty dict.
@@ -85,11 +85,11 @@ class BaseCamera():
         Process images.
         """
         for image in self.get_images():
-            extra_exif = self.get_extra_exif(image)
-            print(f'extra_exif: {extra_exif}')
-            exif_data = self.format_and_merge_exif_data(extra_data=extra_exif)
-            print(f'exif_data: {exif_data}')
-            helpers.enrich_exif(image, exif_data)
+            exif = self.get_exif(image) # NOTE: we only really need to do this for cuddelinks at the moment.
+            print(f'exif: {exif}')
+            new_tags = self.prep_new_tags(existing_exif=exif)
+            print(f'new_tags: {new_tags}')
+            helpers.enrich_exif(image, new_tags)
             yield image
 
 
@@ -102,14 +102,14 @@ class RidgetecCamera(BaseCamera):
     def evaluate_make(self):
         return 'ridgetec' in self.email['From']
 
-    def get_metadata(self):
+    def get_additional_metadata(self):
         ridgetec_parser = parsers.RidgetecParser()
         ridgetec_parser.feed(self.email.as_string())
         return {
             field:getattr(ridgetec_parser, field) for field in
             ['filename', 'img_url', 'imei', 'date_time_created', 'account_id']}
 
-    def format_and_merge_exif_data(self, extra_data=None):
+    def prep_new_tags(self, existing_exif=None):
         return {
             'Make': str(self),
             'SerialNumber': self.metadata.get('imei'),
@@ -135,13 +135,16 @@ class CuddebackCamera(BaseCamera):
     def get_images(self):
         return helpers.save_attached_images(self.email)
 
-    def format_and_merge_exif_data(self, extra_data=None):
+    def prep_new_tags(self, existing_exif=None):
+        print(f'prep_new_tags - Cuddeback - existing_exif: {existing_exif}')
         ret = {}
-        extra_data = [{}] if not extra_data else extra_data
-        parts = extra_data[0].get('EXIF:UserComment', '').split(',')
+        existing_exif = [{}] if not existing_exif else existing_exif
+        print(f'prep_new_tags - Cuddeback - existing_exif: {existing_exif}')
+        user_comments = existing_exif[0].get('EXIF:UserComment', '').split(',')
+        print(f'prep_new_tags - Cuddeback - user_comments: {user_comments}')
         cam_id = None
-        for part in parts:
-            key, value = part.split('=')
+        for comment in user_comments:
+            key, value = comment.split('=')
             if key == 'ID':
                 cam_id = value
                 break
@@ -149,5 +152,5 @@ class CuddebackCamera(BaseCamera):
             ret['SerialNumber'] = cam_id
         return ret
 
-    def get_extra_exif(self, image):
+    def get_exif(self, image):
         return helpers.get_exif(image)
