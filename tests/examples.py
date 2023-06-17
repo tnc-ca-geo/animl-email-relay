@@ -1,6 +1,7 @@
 # pylint:disable=C0114,E0401
 # standard library
-from email.message import EmailMessage
+import codecs
+import email
 import io
 import os
 import tempfile
@@ -11,6 +12,10 @@ from PIL import Image
 EVENT= {'Records': [{
     's3': {
         'bucket': {'name': 'a_bucket'}, 'object': {'key': 'a_key'}}}]}
+
+'''
+RidgeTec
+'''
 RIDGETEC_EMAIL_BODY = (
     '<html><body>'
     '    <img src="https://web.org/images/an_image.jpg"></img>'
@@ -20,13 +25,35 @@ RIDGETEC_EMAIL_BODY = (
     '    <whatever data-account-id="someone"></whatever>'
     '</body></html>'
 )
-RIDGETEC_EMAIL = EmailMessage()
+RIDGETEC_EMAIL = email.message.EmailMessage()
 RIDGETEC_EMAIL['From'] ='An email from ridgetec'
 RIDGETEC_EMAIL['Body'] = RIDGETEC_EMAIL_BODY
-CUDDEBACK_EMAIL = EmailMessage()
+
+'''
+Cuddeback
+
+In this case, because (a) the emails are sent as attachments (vs. as S3 URLs 
+that expire and we do not control like RidgeTecs), and (b) we need to extract
+exif data from the images, we're parsing examples of real CuddeBack/CuddeLink 
+emails and using them for testing instead of mocking them.
+
+NOTE: on second thought ^ I'm temporarily abandoning that for now. I am confused
+by how the camera tests relate to the handler tests, which do use the real email
+files. Need more clarity from Falk. Pausing for now.
+'''
+
+# f = open('tests/example_ridgetec.eml', 'rb')
+# email_data = codecs.decode(f.read(), 'quopri')
+# CUDDEBACK_EMAIL = email.message_from_bytes(
+#     email_data, policy=email.policy.default)
+# OTHER_EMAIL = email.message.EmailMessage()
+# OTHER_EMAIL['From'] = 'Another message'
+
+CUDDEBACK_EMAIL = email.message.EmailMessage()
 CUDDEBACK_EMAIL['From'] = 'An email from cuddelink'
-OTHER_EMAIL = EmailMessage()
+OTHER_EMAIL = email.message.EmailMessage()
 OTHER_EMAIL['From'] = 'Another message'
+
 
 
 def create_chunked_image_response():

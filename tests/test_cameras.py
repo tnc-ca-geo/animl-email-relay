@@ -60,5 +60,19 @@ class TestCuddebackCamera(TestCase):
         camera = cameras.CuddebackCamera(examples.OTHER_EMAIL)
         self.assertFalse(camera.evaluate_make())
 
-    # add additional tests
+    def test_get_cam_id(self):
+        camera = cameras.CuddebackCamera(examples.CUDDEBACK_EMAIL)
+        # TODO: get exif
+        exif = camera.get_exif()
+        self.assertEqual(
+            camera.prep_new_tags(existing_exif=exif), {'SerialNumber': 'B'})
+
+    # # TODO: figure out how to make save_attached_images return a predictable temp path
+    # @mock.patch('helpers.save_attached_images')
+    # def test_get_images(self, save_attached_images):
+    #     save_attached_images.return_value = {} # TODO: dict to expect as return value
+    #     camera = cameras.CuddebackCamera(examples.CUDDEBACK_EMAIL)
+    #     images = camera.get_images()
+    #     self.assertEqual(list(images), ['/tmp_path/an_image.jpg']) # TODO: list of dicts as specidied above
+
 
