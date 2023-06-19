@@ -45,7 +45,7 @@ class BaseCamera():
 
     def get_additional_metadata(self):
         """
-        Extract additional metadata from emails' body, subject line, etc.
+        Extract additional metadata from emails' bodies, subject lines, etc.
         """
         return {}
 
@@ -85,11 +85,15 @@ class BaseCamera():
         Process images.
         """
         for image in self.get_images():
-            exif = self.get_exif(image) # NOTE: we only really need to do this for cuddelinks at the moment.
-            print(f'exif: {exif}')
+            # NOTE: we only really need to get exif for cuddelinks at the moment
+            # but we're currently reading it before and after updates for all
+            # cameras for debugging purposes
+            exif = self.get_exif(image)
+            print(f'existing exif: {exif}')
             new_tags = self.prep_new_tags(existing_exif=exif)
-            print(f'new_tags: {new_tags}')
             helpers.enrich_exif(image, new_tags)
+            updated_exif = self.get_exif(image)
+            print(f'updated exif: {updated_exif}')
             yield image
 
 
@@ -99,6 +103,9 @@ class RidgetecCamera(BaseCamera):
     """
     name = 'RidgeTec'
 
+    def get_exif(self, image):
+        return helpers.get_exif(image)
+    
     def evaluate_make(self):
         return 'ridgetec' in self.email['From']
 
@@ -111,6 +118,8 @@ class RidgetecCamera(BaseCamera):
 
     def prep_new_tags(self, existing_exif=None):
         return {
+            # TODO: double check why we're setting Make. 
+            # Do Ridgetecs not include makes in their exif?
             'Make': str(self),
             'SerialNumber': self.metadata.get('imei'),
             'DateTimeOriginal': self.metadata.get(
@@ -129,6 +138,9 @@ class CuddebackCamera(BaseCamera):
     """
     name = 'CUDDEBACK'
 
+    def get_exif(self, image):
+        return helpers.get_exif(image)
+    
     def evaluate_make(self):
         return 'cuddelink' in self.email['From']
 
@@ -136,12 +148,9 @@ class CuddebackCamera(BaseCamera):
         return helpers.save_attached_images(self.email)
 
     def prep_new_tags(self, existing_exif=None):
-        print(f'prep_new_tags - Cuddeback - existing_exif: {existing_exif}')
         ret = {}
         existing_exif = [{}] if not existing_exif else existing_exif
-        print(f'prep_new_tags - Cuddeback - existing_exif: {existing_exif}')
         user_comments = existing_exif[0].get('EXIF:UserComment', '').split(',')
-        print(f'prep_new_tags - Cuddeback - user_comments: {user_comments}')
         cam_id = None
         for comment in user_comments:
             key, value = comment.split('=')
@@ -151,6 +160,29 @@ class CuddebackCamera(BaseCamera):
         if cam_id:
             ret['SerialNumber'] = cam_id
         return ret
+    
+
+class SpartanCamera(BaseCamera):
+    """
+    Implements Spartan camera emails.
+    """
+    name = 'Spartan'
 
     def get_exif(self, image):
         return helpers.get_exif(image)
+    
+    def evaluate_make(self):
+        return 'hcowireless' in self.email['From']
+    
+    def get_additional_metadata(self):
+        subject_line = self.email['subject']
+        print(f'subject line: {subject_line}')
+        camera_id = subject_line.split('-')[-1]
+        return {'camera_id': camera_id} if camera_id else {}
+
+    def get_images(self):
+        return helpers.save_attached_images(self.email)
+
+    def prep_new_tags(self, existing_exif=None):
+        return {'SerialNumber': self.metadata.get('camera_id')}
+

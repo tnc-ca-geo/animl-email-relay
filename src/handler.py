@@ -23,7 +23,8 @@ SSM_NAMES = {'INGESTION_BUCKET': f'/images/ingestion-bucket-{STAGE}'}
 
 # register camera classes, BaseCamera must be the last in the list
 SUPPORTED_CAMERAS = [
-    cameras.RidgetecCamera, cameras.CuddebackCamera, cameras.BaseCamera]
+    cameras.RidgetecCamera, cameras.CuddebackCamera, cameras.SpartanCamera, 
+    cameras.BaseCamera]
 
 
 s3 = boto3.client('s3')

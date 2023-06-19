@@ -11,6 +11,7 @@ import os
 import tempfile
 import mimetypes
 # third party
+from exiftool import ExifTool
 from exiftool import ExifToolHelper
 from exiftool.exceptions import ExifToolExecuteError
 import boto3
@@ -28,6 +29,15 @@ class ImageDownloadError(Exception):
     Subclass Exception for more specific error handling and testing.
     """
 
+def get_encoding(email_data):
+    """
+    Retrieve the email's content-transfer-encoding header (if present)
+    Some emails we receive are quoted-printable encoded (e.g. RidgeTec);
+    while others are not.
+    """
+    msg = email.message_from_bytes(email_data, policy=email.policy.default)
+    return msg["Content-Transfer-Encoding"]
+
 
 def get_email_from_s3(bucket, key):
     """
@@ -43,7 +53,11 @@ def get_email_from_s3(bucket, key):
     # TODO: add error handling
     s3_object = s3.get_object(Bucket=bucket, Key=key)
     email_data = s3_object['Body'].read()
-    email_data = codecs.decode(email_data, 'quopri')
+    encoding = get_encoding(email_data)
+    if encoding == 'quoted-printable':
+        print('quoted-printable encoding detected; decoding')
+        email_data = codecs.decode(email_data, 'quopri')
+    # TODO: also decode if entire email was encoded in base64?
     return email.message_from_bytes(email_data, policy=email.policy.default)
 
 
@@ -64,6 +78,26 @@ def get_exif(image_path):
             return []
 
 
+def repair_exif(image_path):
+    """
+    Repair exif problems if they exist. Exiftool will not write to an image's
+    exif if there are any existing issues with it, so it's important to fix
+    them first.
+    see: https://exiftool.org/faq.html#Q20
+    """
+    with ExifTool() as exif_tool:
+        try:
+            # This command deletes all metadata then copies all writable tags 
+            # that can be extracted from the original image to the same 
+            # locations in the updated image
+            exif_tool.execute('-all=', '-tagsfromfile', '@', '-all:all', 
+                              '-unsafe', '-icc_profile', image_path)
+        except (ValueError, TypeError, ExifToolExecuteError) as err:
+            print(f'{err.__class__.__name__}: {err}')
+        except Exception as error:
+            print('An error ocurred repairing exif:', error)
+
+
 def enrich_exif(image_path, new_tags):
     """
     Enrich existing image file with additional data.
@@ -77,6 +111,7 @@ def enrich_exif(image_path, new_tags):
     print(f'Setting new_tags on {image_path}: {new_tags}...')
     if not new_tags:
         return
+    repair_exif(image_path)
     with ExifToolHelper() as exif_tool:
         try:
             exif_tool.set_tags(
@@ -112,7 +147,6 @@ def download_image(filename, img_url):
             handle.write(block)
     return tmp_path
 
-
 def save_attached_images(email_msg):
     """
     Extract attached images and store in temporary files.
@@ -126,7 +160,7 @@ def save_attached_images(email_msg):
     tmp_directory = tempfile.mkdtemp()
     for part in email_msg.iter_attachments():
         filename = os.path.join(tmp_directory, part.get_filename())
-        print(f'save_attached_images - tmp filename: {filename}')
+        print(f'Saving attached image to: {filename}')
         if filename:
             ext = os.path.splitext(filename)[1]
         else:
