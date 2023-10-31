@@ -165,7 +165,7 @@ def save_attached_images(email_msg):
             ext = os.path.splitext(filename)[1]
         else:
             ext = mimetypes.guess_extension(part.get_content_type())
-        if ext.casefold() == '.JPG'.casefold():
+        if ext.casefold() == '.JPG'.casefold() or ext.casefold() == '.jpeg':
             with open(filename, 'wb') as handle:
                 handle.write(part.get_content())
                 img_attachments.append(filename)
