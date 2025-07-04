@@ -34,8 +34,8 @@ class RidgetecParser(parser.HTMLParser):
         for attr in attrs:
             if attr[0] == 'src':
                 self.img_url = attr[1]
-                url_parts = urlparse(attr[1])
-                self.filename = url_parts.path.split('/')[-1]
+            elif attr[0] == 'data-filename':
+                self.filename = str(attr[1])
             elif attr[0] == 'data-date-time-created':
                 self.date_time_created = attr[1]
             elif attr[0] == 'data-timezone':
