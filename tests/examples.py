@@ -18,11 +18,12 @@ RidgeTec
 '''
 RIDGETEC_EMAIL_BODY = (
     '<html><body>'
-    '    <img src="https://web.org/images/an_image.jpg"></img>'
+    '    <img src="https://web.org/images/XWka0ylxSDAldA5WSAHrWeVtZpRHX5FBlLGA"></img>'
     '    <whatever data-date-time-created="2020-01-01"></whatever>'
     '    <whatever data-timezone="US/Los Angeles"></whatever>'
     '    <whatever data-imei="0815"></whatever>'
     '    <whatever data-account-id="someone"></whatever>'
+    '    <whatever data-filename="an_image.jpg"></whatever>'
     '</body></html>'
 )
 RIDGETEC_EMAIL = email.message.EmailMessage()
