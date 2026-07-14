@@ -89,14 +89,14 @@ class TestSwiftCamera(TestCase):
         self.assertEqual(camera.get_additional_metadata(), {
             'camera_id': 'TEST CAM',
             'date_time_created': '2026:07:10 11:15:46',
-            'imei': '8680200354319711'})
+            'serial_number': 'SYPR0799'})
 
     def test_format_exifdata_no_existing(self):
         camera = cameras.SwiftCamera(examples.SWIFT_EMAIL)
         self.assertEqual(
             camera.prep_new_tags(existing_exif=None), {
                 'Make': 'Swift',
-                'SerialNumber': '8680200354319711',
+                'SerialNumber': 'SYPR0799',
                 'DateTimeOriginal': '2026:07:10 11:15:46',
                 'UserComment': 'CameraId=TEST CAM'})
 
@@ -106,7 +106,7 @@ class TestSwiftCamera(TestCase):
         self.assertEqual(
             camera.prep_new_tags(existing_exif=existing_exif), {
                 'Make': 'Swift',
-                'SerialNumber': '8680200354319711',
+                'SerialNumber': 'SYPR0799',
                 'UserComment': 'CameraId=TEST CAM'})
 
     @mock.patch('helpers.save_attached_images')
