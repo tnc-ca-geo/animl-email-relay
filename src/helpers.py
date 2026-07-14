@@ -144,10 +144,26 @@ def download_image(filename, img_url):
         response = requests.get(img_url, stream=True)
         if not response.ok:
             raise ImageDownloadError(f'Error downloading image: {response}')
+        content_type = (response.headers.get('Content-Type') or '').lower()
+        if content_type and not content_type.startswith('image/'):
+            raise ImageDownloadError(
+                f'Expected image response but got Content-Type '
+                f'{content_type!r} for {img_url}')
         for block in response.iter_content(1024):
             if not block:
                 break
             handle.write(block)
+    # Fallback magic-byte check. Guards against servers that mislabel/omit
+    # Content-Type but still return HTML/JSON. JPEG = FF D8 FF; PNG = 89 50 4E
+    # 47 0D 0A 1A 0A.
+    with open(tmp_path, 'rb') as handle:
+        head = handle.read(8)
+    if not (
+            head.startswith(b'\xff\xd8\xff') or
+            head.startswith(b'\x89PNG\r\n\x1a\n')):
+        raise ImageDownloadError(
+            f'Downloaded file for {img_url} is not a JPEG or PNG '
+            f'(magic bytes: {head!r})')
     return tmp_path
 
 def save_attached_images(email_msg):
