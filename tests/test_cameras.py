@@ -49,7 +49,8 @@ class TestRidgetecCamera(TestCase):
         self.assertEqual(list(images), ['/tmp_path/an_image.jpg'])
         download_image.assert_called_once()
         download_image.assert_called_with(
-            'an_image.jpg', 'https://web.org/images/an_image.jpg')
+            'an_image.jpg',
+            'https://web.org/images/XWka0ylxSDAldA5WSAHrWeVtZpRHX5FBlLGA')
 
 
 class TestCuddebackCamera(TestCase):
@@ -62,8 +63,7 @@ class TestCuddebackCamera(TestCase):
 
     def test_get_cam_id(self):
         camera = cameras.CuddebackCamera(examples.CUDDEBACK_EMAIL)
-        # TODO: get exif
-        exif = camera.get_exif()
+        exif = [{'EXIF:UserComment': 'ID=B,OTHER=X'}]
         self.assertEqual(
             camera.prep_new_tags(existing_exif=exif), {'SerialNumber': 'B'})
 
