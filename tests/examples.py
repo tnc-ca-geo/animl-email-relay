@@ -72,6 +72,16 @@ SWIFT_EMAIL['From'] = 'getpic <getpic@wuyuansys.net>'
 SWIFT_EMAIL['Subject'] = SWIFT_EMAIL_SUBJECT
 SWIFT_EMAIL.set_content(SWIFT_EMAIL_BODY)
 
+# Real-world Swift .eml loaded from disk. Exercises the multipart/mixed
+# structure (text/plain body + JPEG attachment) and the base64 MIME-encoded
+# subject line that we get in production.
+with open(
+        os.path.join(os.path.dirname(__file__), 'example_swift.eml'), 'rb') \
+        as _swift_fh:
+    SWIFT_EMAIL_REAL = email.message_from_bytes(
+        _swift_fh.read(), policy=email.policy.default)
+
+
 
 
 def create_chunked_image_response():

@@ -232,11 +232,14 @@ class SwiftCamera(BaseCamera):
             'DateTimeOriginal': self.metadata.get('date_time_created'),
             'UserComment': (
                 f'CameraId={camera_id}' if camera_id else None)}
+        # Always normalize Make to our own label; for the other tags preserve
+        # any value the camera already wrote to the image's EXIF.
+        always_overwrite = {'Make'}
         ret = {}
         for key, value in candidates.items():
             if not value:
                 continue
-            if existing.get(f'EXIF:{key}'):
+            if key not in always_overwrite and existing.get(f'EXIF:{key}'):
                 continue
             ret[key] = value
         return ret

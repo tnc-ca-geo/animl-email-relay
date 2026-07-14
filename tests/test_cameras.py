@@ -102,12 +102,28 @@ class TestSwiftCamera(TestCase):
 
     def test_format_exifdata_with_existing(self):
         camera = cameras.SwiftCamera(examples.SWIFT_EMAIL)
-        existing_exif = [{'EXIF:DateTimeOriginal': '2026:07:10 12:32:44'}]
+        existing_exif = [{
+            'EXIF:Make': 'SIMCOM',
+            'EXIF:DateTimeOriginal': '2026:07:10 12:32:44'}]
+        # Make always overwrites; DateTimeOriginal is preserved because the
+        # image already has one.
         self.assertEqual(
             camera.prep_new_tags(existing_exif=existing_exif), {
                 'Make': 'Swift',
                 'SerialNumber': 'SYPR0799',
                 'UserComment': 'CameraId=TEST CAM'})
+
+    def test_parse_metadata_real_eml(self):
+        """
+        Exercise the real-world multipart/mixed structure and the base64
+        MIME-encoded subject line from a production Swift email.
+        """
+        camera = cameras.SwiftCamera(examples.SWIFT_EMAIL_REAL)
+        self.assertTrue(camera.evaluate_make())
+        self.assertEqual(camera.get_additional_metadata(), {
+            'camera_id': 'TEST CAM',
+            'date_time_created': '2026:07:10 12:32:44',
+            'serial_number': 'SYPR0799'})
 
     @mock.patch('helpers.save_attached_images')
     def test_get_images(self, save_attached_images):
