@@ -37,6 +37,19 @@ provider:
             - - "arn:aws:s3:::"
               - animl-data-staging-${opt:stage, self:provider.stage, 'dev'}
               - "/*"
+    - Effect: "Allow"
+      Action:
+        - "s3:PutObject"
+      Resource:
+        - Fn::Join:
+            - ""
+            - - "arn:aws:s3:::"
+              - Ref: S3BucketAnimlemaildeadletter
+        - Fn::Join:
+            - ""
+            - - "arn:aws:s3:::"
+              - Ref: S3BucketAnimlemaildeadletter
+              - "/*"
     - Effect: Allow
       Action:
         - ssm:GetParameter
@@ -73,6 +86,24 @@ resources:
           BlockPublicPolicy: true
           IgnorePublicAcls: true
           RestrictPublicBuckets: true
+    # Dead-letter bucket (emails that failed to process)
+    S3BucketAnimlemaildeadletter:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: animl-email-dead-letter-${opt:stage, self:provider.stage, 'dev'}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+    # SSM Param for the email dead-letter bucket
+    SSMParameterAnimlemaildeadletterbucket:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Description: Animl email dead-letter bucket name
+        Name: /images/email-dead-letter-bucket-${opt:stage, self:provider.stage, 'dev'}
+        Type: String
+        Value: animl-email-dead-letter-${opt:stage, self:provider.stage, 'dev'}
     # Bucket policy for animl-email-staging
     S3BucketPolicyAnimlEmailStagingBucketPolicy:
       Type: AWS::S3::BucketPolicy
