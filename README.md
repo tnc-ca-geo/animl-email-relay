@@ -93,7 +93,7 @@ pip install requests
 pip install PyExifTool
 ```
 
-### Freeze dependenceies in requirements.txt
+### Freeze dependencies in requirements.txt
 
 ```
 pip freeze > requirements.txt

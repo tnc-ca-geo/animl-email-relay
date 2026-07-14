@@ -2,6 +2,8 @@
 # standard library
 import codecs
 import email
+import email.message
+import email.policy
 import io
 import os
 import tempfile
@@ -54,6 +56,21 @@ CUDDEBACK_EMAIL = email.message.EmailMessage()
 CUDDEBACK_EMAIL['From'] = 'An email from cuddelink'
 OTHER_EMAIL = email.message.EmailMessage()
 OTHER_EMAIL['From'] = 'Another message'
+
+
+'''
+Swift
+'''
+SWIFT_EMAIL_BODY = (
+    'Camera ID: TEST CAM   \n'
+    'Pic was taken on Date & Time:(10/07/2026  11:15:46)\n'
+)
+SWIFT_EMAIL_SUBJECT = (
+    'TEST CAM    -8680200354319711-1007202611154-4-SYPR0799.JPG')
+SWIFT_EMAIL = email.message.EmailMessage()
+SWIFT_EMAIL['From'] = 'getpic <getpic@wuyuansys.net>'
+SWIFT_EMAIL['Subject'] = SWIFT_EMAIL_SUBJECT
+SWIFT_EMAIL.set_content(SWIFT_EMAIL_BODY)
 
 
 
