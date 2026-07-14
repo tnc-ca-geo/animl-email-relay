@@ -18,13 +18,16 @@ import helpers
 LAMBDA_TASK_ROOT = os.environ.get('LAMBDA_TASK_ROOT', '')
 EXIFTOOL_PATH = f'{LAMBDA_TASK_ROOT}/exiftool'
 STAGE = os.environ.get('STAGE', '')
-SSM_NAMES = {'INGESTION_BUCKET': f'/images/ingestion-bucket-{STAGE}'}
+SSM_NAMES = {
+    'INGESTION_BUCKET': f'/images/ingestion-bucket-{STAGE}',
+    'DEAD_LETTER_BUCKET': f'/images/email-dead-letter-bucket-{STAGE}',
+}
 
 
 # register camera classes, BaseCamera must be the last in the list
 SUPPORTED_CAMERAS = [
-    cameras.RidgetecCamera, cameras.CuddebackCamera, cameras.SpartanCamera, 
-    cameras.BaseCamera]
+    cameras.RidgetecCamera, cameras.CuddebackCamera, cameras.SpartanCamera,
+    cameras.SwiftCamera, cameras.BaseCamera]
 
 
 s3 = boto3.client('s3')
@@ -70,26 +73,70 @@ def handler(event, context):
 
     Args Args:
         event(AWS lambda trigger event)
-        context(AWS lamba context)
+        context(AWS lambda context)
     Returns:
         None
     """
     config = get_config(context)
+    dlq_bucket = config.get('DEAD_LETTER_BUCKET')
     for record in event['Records']:
         email_bucket = record['s3']['bucket']['name']
         email_key = unquote_plus(record['s3']['object']['key'])
+        event_time = record.get('eventTime')
         print(f'New file detected in {email_bucket}/{email_key}.')
-        msg = helpers.get_email_from_s3(email_bucket, email_key)
-        # test whether email format is supported, if so proceed with the
-        # initialize camera class
-        for camera_class in SUPPORTED_CAMERAS:
-            camera = camera_class(msg)
-            if camera.evaluate_make():
-                break
-        for image in camera.images():
-            _, filename = os.path.split(image)
+        msg = None
+        reason = 'UNKNOWN_ERROR'
+        try:
+            msg = helpers.get_email_from_s3(email_bucket, email_key)
+            # test whether email format is supported, if so proceed with the
+            # initialize camera class
+            camera = None
+            for camera_class in SUPPORTED_CAMERAS:
+                candidate = camera_class(msg)
+                if candidate.evaluate_make():
+                    camera = candidate
+                    print(f'Camera make {camera.name} detected.')
+                    break
+            image_count = 0
+            try:
+                for image in camera.images():
+                    image_count += 1
+                    _, filename = os.path.split(image)
+                    print(
+                        f'Uploading {image} as {filename} '
+                        f'to {config["INGESTION_BUCKET"]}.')
+                    try:
+                        s3.upload_file(
+                            image, config['INGESTION_BUCKET'], filename)
+                    except Exception:
+                        reason = 'UPLOAD_ERROR'
+                        raise
+                    finally:
+                        if os.path.exists(image):
+                            os.remove(image)
+            except NotImplementedError:
+                reason = 'UNSUPPORTED_CAMERA'
+                raise
+            except helpers.ImageDownloadError:
+                reason = 'IMAGE_FETCH_ERROR'
+                raise
+            except Exception:
+                if reason == 'UNKNOWN_ERROR':
+                    reason = 'IMAGE_FETCH_ERROR'
+                raise
+            if image_count == 0:
+                reason = 'UNSUPPORTED_CAMERA'
+                raise RuntimeError(
+                    f'No images extracted from {email_bucket}/{email_key}')
+        except Exception as err:
             print(
-                f'Uploading {image} as {filename} '
-                f'to {config["INGESTION_BUCKET"]}.')
-            s3.upload_file(image, config['INGESTION_BUCKET'], filename)
-            os.remove(image)
+                f'Handler failure ({reason}) for '
+                f'{email_bucket}/{email_key}: {err.__class__.__name__}: {err}')
+            if not dlq_bucket:
+                print(
+                    'DEAD_LETTER_BUCKET is not configured; '
+                    're-raising to fail the invocation.')
+                raise
+            helpers.move_to_dead_letter(
+                s3, email_bucket, email_key, msg, reason,
+                dlq_bucket, event_time_iso=event_time)

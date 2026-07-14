@@ -1,42 +1,42 @@
-Return-Path: <01000197d74b9d52-1ff45ade-5116-4409-a5f1-7a2fb5c66f54-000000@mail.ridgetec.com>
-Received: from a8-77.smtp-out.amazonses.com (a8-77.smtp-out.amazonses.com [54.240.8.77])
- by inbound-smtp.us-west-2.amazonaws.com with SMTP id eu4ahui11e2ubrtr97p2v0svmd9fj891i3k7mh81
+Return-Path: <0100019dbb785e6b-d4c780f0-b48f-4173-b2d2-18695795c60c-000000@mail.ridgetec.com>
+Received: from a48-117.smtp-out.amazonses.com (a48-117.smtp-out.amazonses.com [54.240.48.117])
+ by inbound-smtp.us-west-2.amazonaws.com with SMTP id 0005jit8ecscln8phs1m3cfi0bhk4tm5mt8s5v01
  for animl@codefornature.org;
- Fri, 04 Jul 2025 21:15:47 +0000 (UTC)
+ Thu, 23 Apr 2026 17:52:02 +0000 (UTC)
 X-SES-Spam-Verdict: PASS
 X-SES-Virus-Verdict: PASS
-Received-SPF: pass (spfCheck: domain of mail.ridgetec.com designates 54.240.8.77 as permitted sender) client-ip=54.240.8.77; envelope-from=01000197d74b9d52-1ff45ade-5116-4409-a5f1-7a2fb5c66f54-000000@mail.ridgetec.com; helo=a8-77.smtp-out.amazonses.com;
+Received-SPF: pass (spfCheck: domain of mail.ridgetec.com designates 54.240.48.117 as permitted sender) client-ip=54.240.48.117; envelope-from=0100019dbb785e6b-d4c780f0-b48f-4173-b2d2-18695795c60c-000000@mail.ridgetec.com; helo=a48-117.smtp-out.amazonses.com;
 Authentication-Results: amazonses.com;
- spf=pass (spfCheck: domain of mail.ridgetec.com designates 54.240.8.77 as permitted sender) client-ip=54.240.8.77; envelope-from=01000197d74b9d52-1ff45ade-5116-4409-a5f1-7a2fb5c66f54-000000@mail.ridgetec.com; helo=a8-77.smtp-out.amazonses.com;
- dkim=pass header.i=@ridgetec.com;
+ spf=pass (spfCheck: domain of mail.ridgetec.com designates 54.240.48.117 as permitted sender) client-ip=54.240.48.117; envelope-from=0100019dbb785e6b-d4c780f0-b48f-4173-b2d2-18695795c60c-000000@mail.ridgetec.com; helo=a48-117.smtp-out.amazonses.com;
  dkim=pass header.i=@amazonses.com;
+ dkim=pass header.i=@ridgetec.com;
  dmarc=pass header.from=ridgetec.com;
-X-SES-RECEIPT: AEFBQUFBQUFBQUFFczVZekZCRnFmYzVTTVh5VjBHT1RBczJhM2QzdUEwZDhncjk3OGtNakpXWnY2UEFOOFFHNHZZUFVVMlkvM3NuWWZ3a3o5enJWS0RZc0crVVQvNHpwNDBmTmhqWUtPOEE4bmRMU2NabUVQaHhuWGsxZVpDR1hhaW5hMUdjRXlsT21VU05rV001RU9LamczYnRHQ1hMc2tPRFQ1dTl4eUQ1d3d3dmg3M2NCZUhmbzBtWFI1N3M1Mmdxc3pNMS9pRk4vNHRobGJxOFJ4REZmTDI5NHV2ZWlQc2JnZHBkSklLbnJJWXF6ZzFzQmlNekNTd3Q4N2Q4NDJkR3h3YnJjeHNHTnFGQ3ordXlUb3k0TFpsWkhEYmIreGdMRkpiZUtwdkRvdXVRRlUzcno5SlYzb3lNSTZBS2dNcUdZS1Bzb2pSelQxZGVRQzFoNWNLZWRBSEl0QWRjRXQ2d0kzLzFWeDd4RlRra1ZIL21XVnNPS3NpbWFsZ2MvY2d3Y1AxYmVseGlJPQ==
-X-SES-DKIM-SIGNATURE: a=rsa-sha256; q=dns/txt; b=jQeHAcwzOat4MFU5oeQnyuiYFY82UGuwNTxk8HcFdiahZQh8hE7TFNQdEoyR4GGm8jk3YXQFX4uuDt5erVXZgX57PaAQLzEx1N2pWTyTt5rFeNoCfB/GgvWPZxUhJf9CEPiVF7jvreogUU84uBZo4tNdegwhycw409nwsbX2ZPo=; c=relaxed/simple; s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1751663747; v=1; bh=yKmO6hOwgMNFrfKH4gA8UYhQ2apydgsIWMyaf8JIcQk=; h=From:To:Cc:Bcc:Subject:Date:Message-ID:MIME-Version:Content-Type:X-SES-RECEIPT;
+X-SES-RECEIPT: AEFBQUFBQUFBQUFHN2lmWlhPYkZxZnJISXh0WnZNWmZkdlZoQTFDeHc0VXVqaHpBS2xWV1dkUXNheEIxLzhKT1ZPY3I2amduamd5K3NNbVQ2WHRYcnVOckJEcHFpRWQ1Ync4R0xEaG9DNXFhbVZLTnc2amtNUlhlRExGUUhpSi9OQXhJdWlxcE02blRBQ2RJL25XWkJEY3pFVnl5c1dZa1B1Z1QrV25ab21iZHFCeEgrblFQRTlOWUlXNzVoakJ2azN0U1RiellnN013eFVYL045WXlxYk1QTG04L1QrYzcxaUNnM1hkUm5LNnNzMk1GdkFlVWM3SExITy9TbFprY2VKSm4rUXg4ZzVvVDRZNldZWCtTamtSNjhPR2ZabjBia2FyZ2lFQTdaS3VkT2dTZ3VFem1JNGNvMkdmKzZoNmRNTnQ1Qm1IT1I5U2FqTzVhMll1L2hZT2VuV21qY284MlNxSTFVY3hseXlHYUtKTUh5dlkydFkzdmloN2Fodnkycys5WTFmS0hRbEFRPQ==
+X-SES-DKIM-SIGNATURE: a=rsa-sha256; q=dns/txt; b=dct0++FwHVHA/V5kDfIvj4SYloQaRjzTzGLnY/9mDmW/soB2VlSHJ/n2GMoGLJ0WYw2RoTwfN0znJ/v6c/NL323oIl6pKXPZDYMHCqglN3X6PfaPU+GEYZkaxNwlA+VuoaWjDlwlqI9F4K/Pa8gfK8J1pIZBD6hkVconj8RIb/M=; c=relaxed/simple; s=hsbnp7p3ensaochzwyq5wwmceodymuwv; d=amazonses.com; t=1776966722; v=1; bh=01UjA8vwY8Kws1M6eYpwU43Yqp0ExjSYZ/rEnRPdmtY=; h=From:To:Cc:Bcc:Subject:Date:Message-ID:MIME-Version:Content-Type:X-SES-RECEIPT;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-	s=mkbpl3e34lsmleek4dfoal67pl54bf6e; d=ridgetec.com; t=1751663746;
+	s=l7ow6m5tla6l2peayataellzuemntvx2; d=ridgetec.com; t=1776966721;
 	h=Message-ID:Date:Subject:From:To:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=yKmO6hOwgMNFrfKH4gA8UYhQ2apydgsIWMyaf8JIcQk=;
-	b=NBEorHyIetR+UJF3aMVMhzJICOyIaMueIL2TXWsCblYwYkDyCgNT8kxqlV+wbjNv
-	UAu4mhpQbBktI8tFI59RXjsONLiWBa2pN2vDMuGaKSf8qR5wMKoqTvW6jBOTCTbfBeE
-	VAOt8fuVTIAZ266Kv4FXQkJFYDWAXW5YrznS7Gp8=
+	bh=01UjA8vwY8Kws1M6eYpwU43Yqp0ExjSYZ/rEnRPdmtY=;
+	b=kqngbNbybrMKDfc6P+mFkGjzdexp4NGd6enT0HyXlcxMdG9BpF+1DFJeYVUUIQev
+	6pX28WSXtQQKTZxX0QW/BDlv66De1fEspuHr2cox1svvwn/AQM65JaV/a5+0Ugitr0R
+	5+/mCXIJLwPzSGe5sOdHisK4kV4w/lAABuuG85ao=
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-	s=6gbrjpgwjskckoa6a5zn6fwqkn67xbtw; d=amazonses.com; t=1751663746;
+	s=224i4yxa5dv7c2xz3womw6peuasteono; d=amazonses.com; t=1776966721;
 	h=Message-ID:Date:Subject:From:To:MIME-Version:Content-Type:Content-Transfer-Encoding:Feedback-ID;
-	bh=yKmO6hOwgMNFrfKH4gA8UYhQ2apydgsIWMyaf8JIcQk=;
-	b=ceoohjZAv/xcpzSFqm0EmlYfu3IAxtBTHiJqf5f/P3l5zQaKDeNjfzuhOTeP04xt
-	rEkQZ0TLrYdM13AgV/4a9L45vLGIRqn5jTqSNIA8+S0lKkfw2FBDWPNJnLCdYbwWdpk
-	wn7VHVp9ySQQ10OvRd1++a/VysnnkXL+5qAoRSVw=
-Message-ID: <01000197d74b9d52-1ff45ade-5116-4409-a5f1-7a2fb5c66f54-000000@email.amazonses.com>
-Date: Fri, 4 Jul 2025 21:15:46 +0000
-Subject: Bulito
+	bh=01UjA8vwY8Kws1M6eYpwU43Yqp0ExjSYZ/rEnRPdmtY=;
+	b=ZYPkGIrKMylN9LvMva2hWIA6KREin+msSHwzcNiRAgE5SuhWrswS6eiMjnatK6y8
+	+lI7e7IlMxoM1NCGHwGhW3UkdFyNVyTzVUhPr5KuiKRaa8hig9K+U4ELZMj9Tfikk4X
+	M/mZtXLBwAWBPlaYAb3cioE14vlR2lBJO5SgkWrA=
+Message-ID: <0100019dbb785e6b-d4c780f0-b48f-4173-b2d2-18695795c60c-000000@email.amazonses.com>
+Date: Thu, 23 Apr 2026 17:52:01 +0000
+Subject: Camera05
 From: no-reply@ridgetec.com
 To: animl@codefornature.org
 MIME-Version: 1.0
 Content-Type: text/html; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 Feedback-ID: ::1.us-east-1.8WeZUvx9uMGGhyZZYD9Dl3W/Spopa5akk0ZX4WC0CeA=:AmazonSES
-X-SES-Outgoing: 2025.07.04-54.240.8.77
+X-SES-Outgoing: 2026.04.23-54.240.48.117
 
 <!DOCTYPE html>
 <html>
@@ -72,7 +72,7 @@ or: #F2F4F6;" align=3D"center">
                             <a style=3D"font-family: Arial, &#039;Helvetica=
  Neue&#039;, Helvetica, sans-serif; font-size: 16px; font-weight: bold; col=
 or: #2F3133; text-decoration: none; text-shadow: 0 1px 0 white;" href=3D"ht=
-tps://api.ridgetec.com" target=3D"_blank">
+tps://portal.ridgetec.com" target=3D"_blank">
                                 RidgeTec Portal
                             </a>
                         </td>
@@ -94,8 +94,8 @@ Helvetica Neue&#039;, Helvetica, sans-serif; padding: 35px;">
 #2F3133; font-size: 19px; font-weight: bold; text-align: left;">
                                             <p>This email was generated by =
 the RidgeTec Portal for <br />
-                                                camera Bulito owned by Zoe =
-L Zilz
+                                                camera Camera05 owned by Fa=
+rley connelly
                                         </h1>
 
                                         <!-- Intro -->
@@ -109,24 +109,24 @@ r: #74787E; font-size: 16px; line-height: 1.5em;">
                                            =20
                                         <p>
                                             <a href=3D"https://portal.ridge=
-tec.com/viewemailphoto/?param=3DmJNqwxUBxwZ2HGZ4HGBMtDpY5Gz" target=3D"_bla=
-nk">
+tec.com/viewemailphoto/?param=3DoHa91GkwlHwAmxwAmRGZSkRa3AUY" target=3D"_bl=
+ank">
                                                 <img=20
                                                         data-imagetype=3D"E=
 xternal"
                                                         data-date-time-crea=
-ted=3D"2025-07-04 14:15:22"
+ted=3D"2026-04-23 10:22:02"
                                                         data-timezone=3D"Am=
 erica/Los_Angeles"
-                                                        data-imei=3D"864839=
-042286761"
+                                                        data-imei=3D"862044=
+071681188"
                                                         data-account-id=3D"=
-4795"
+6265"
                                                         data-filename=3D"PI=
-CT0418.JPG"
+CT1000739.JPG"
                                                         src=3D"https://port=
-al.ridgetec.com/camera/image-cache/XWka0ylxSDAldA5WSAHrWeVtZpRHX5FBlLGAktGA=
-58lA4ZQBk8FA5pQAPbzvFGZhHNtKuDjp4uNZuZue4"=20
+al.ridgetec.com/camera/image-cache/gxMa6tgZrZB3q43Y79odURQn1UOyFhVGA2ZGB2ZG=
+Zk8vZ5DQAl8FA2VwApZ8wGvpMNeHDkJpVKk7zXsO71"=20
                                                         width=3D"360"
                                                     >
                                             </a>
@@ -165,9 +165,9 @@ Helvetica Neue&#039;, Helvetica, sans-serif; color: #AEAEAE; padding: 35px;=
  text-align: center;">
                                         <p style=3D"margin-top: 0; color: #=
 74787E; font-size: 12px; line-height: 1.5em;">
-                                            &copy; 2025
+                                            &copy; 2026
                                             <a style=3D"color: #3869D4;" hr=
-ef=3D"https://api.ridgetec.com" target=3D"_blank">RidgeTec Portal</a>.
+ef=3D"https://portal.ridgetec.com" target=3D"_blank">RidgeTec Portal</a>.
                                             All rights reserved.
                                         </p>
                                     </td>

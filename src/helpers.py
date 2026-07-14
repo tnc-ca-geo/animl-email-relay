@@ -7,9 +7,12 @@ effects. Please use to build camera specific classes in makes.py.
 import codecs
 import email
 import email.policy
+import email.utils
 import os
+import re
 import tempfile
 import mimetypes
+from datetime import timezone
 # third party
 from exiftool import ExifTool
 from exiftool import ExifToolHelper
@@ -141,10 +144,26 @@ def download_image(filename, img_url):
         response = requests.get(img_url, stream=True)
         if not response.ok:
             raise ImageDownloadError(f'Error downloading image: {response}')
+        content_type = (response.headers.get('Content-Type') or '').lower()
+        if content_type and not content_type.startswith('image/'):
+            raise ImageDownloadError(
+                f'Expected image response but got Content-Type '
+                f'{content_type!r} for {img_url}')
         for block in response.iter_content(1024):
             if not block:
                 break
             handle.write(block)
+    # Fallback magic-byte check. Guards against servers that mislabel/omit
+    # Content-Type but still return HTML/JSON. JPEG = FF D8 FF; PNG = 89 50 4E
+    # 47 0D 0A 1A 0A.
+    with open(tmp_path, 'rb') as handle:
+        head = handle.read(8)
+    if not (
+            head.startswith(b'\xff\xd8\xff') or
+            head.startswith(b'\x89PNG\r\n\x1a\n')):
+        raise ImageDownloadError(
+            f'Downloaded file for {img_url} is not a JPEG or PNG '
+            f'(magic bytes: {head!r})')
     return tmp_path
 
 def save_attached_images(email_msg):
@@ -172,3 +191,139 @@ def save_attached_images(email_msg):
     if len(img_attachments) == 0:
         print('No image files found.')
     return img_attachments
+
+
+_SANITIZE_RE = re.compile(r'[^a-z0-9]+')
+
+
+def _sanitize(value):
+    """
+    Lowercase and collapse any run of non-alphanumeric chars to a single '_'.
+    Trim leading/trailing underscores. Returns '' if input is falsy.
+    """
+    if not value:
+        return ''
+    return _SANITIZE_RE.sub('_', value.lower()).strip('_')
+
+
+def build_dead_letter_key(msg, source_key, event_time_iso=None):
+    """
+    Build a flat DLQ key of the form:
+        YYYY-MM-DDTHH-MM-SSZ_<sender>_<original-key-basename>
+
+    - Timestamp prefers the email's Date header (converted to UTC); falls back
+      to event_time_iso (S3 event 'eventTime'), then to '19700101T00-00-00Z'.
+    - Sender is the address part of From, sanitized. Empty -> 'unknown-sender'.
+    - Original-key basename is sanitized. '.eml' suffix stripped so caller can
+      add variant-specific suffixes (e.g. '.raw.eml', '.decoded.eml').
+
+    Args:
+        msg: email.message.Message (may be None if parsing failed).
+        source_key(str): S3 key of the source email object.
+        event_time_iso(str|None): S3 event 'eventTime' as fallback timestamp.
+    Returns:
+        str
+    """
+    ts = None
+    if msg is not None:
+        date_hdr = msg.get('Date') if hasattr(msg, 'get') else None
+        if date_hdr:
+            try:
+                parsed = email.utils.parsedate_to_datetime(date_hdr)
+                if parsed is not None:
+                    if parsed.tzinfo is None:
+                        parsed = parsed.replace(tzinfo=timezone.utc)
+                    ts = parsed.astimezone(timezone.utc)
+            except (TypeError, ValueError):
+                ts = None
+    if ts is None and event_time_iso:
+        try:
+            iso = event_time_iso.replace('Z', '+00:00')
+            from datetime import datetime
+            parsed = datetime.fromisoformat(iso)
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            ts = parsed.astimezone(timezone.utc)
+        except (TypeError, ValueError):
+            ts = None
+    ts_str = (
+        ts.strftime('%Y-%m-%dT%H-%M-%SZ') if ts is not None
+        else '19700101T00-00-00Z')
+
+    sender = ''
+    if msg is not None:
+        from_hdr = msg.get('From') if hasattr(msg, 'get') else None
+        if from_hdr:
+            _, addr = email.utils.parseaddr(str(from_hdr))
+            sender = _sanitize(addr)
+    if not sender:
+        sender = 'unknown-sender'
+
+    basename = os.path.basename(source_key or '') or 'no-key'
+    # strip trailing .eml (case insensitive) before sanitizing
+    if basename.lower().endswith('.eml'):
+        basename = basename[:-4]
+    basename = _sanitize(basename) or 'no-key'
+
+    return f'{ts_str}_{sender}_{basename}'
+
+
+def move_to_dead_letter(
+        s3_client, source_bucket, source_key, msg, reason,
+        dlq_bucket, event_time_iso=None):
+    """
+    Copy the raw S3 object AND the decoded message to the DLQ bucket, then
+    delete the source. Two DLQ objects are written per failure:
+      - <base>.raw.eml     : server-side copy of the original S3 object
+      - <base>.decoded.eml : msg.as_bytes() (skipped if msg is None)
+    Source is deleted only after all writes succeed. Any write failure raises.
+
+    Args:
+        s3_client: boto3 S3 client.
+        source_bucket(str): staging bucket the object currently lives in.
+        source_key(str): key of the source object.
+        msg: parsed email.message.Message, or None if parsing failed.
+        reason(str): short failure category tag stored in object metadata.
+        dlq_bucket(str): destination DLQ bucket name.
+        event_time_iso(str|None): S3 event 'eventTime' for timestamp fallback.
+    Returns:
+        dict with 'raw_key' and (optionally) 'decoded_key'.
+    """
+    base = build_dead_letter_key(msg, source_key, event_time_iso)
+    raw_key = f'{base}.raw.eml'
+    decoded_key = f'{base}.decoded.eml'
+    common_meta = {
+        'failure-reason': reason,
+        'original-bucket': source_bucket,
+        'original-key': source_key,
+    }
+
+    raw_meta = dict(common_meta, variant='raw')
+    if msg is None:
+        raw_meta['decoded-write'] = 'skipped'
+    s3_client.copy_object(
+        Bucket=dlq_bucket,
+        Key=raw_key,
+        CopySource={'Bucket': source_bucket, 'Key': source_key},
+        MetadataDirective='REPLACE',
+        Metadata=raw_meta,
+    )
+
+    result = {'raw_key': raw_key}
+
+    if msg is not None:
+        s3_client.put_object(
+            Bucket=dlq_bucket,
+            Key=decoded_key,
+            Body=msg.as_bytes(),
+            ContentType='message/rfc822',
+            Metadata=dict(common_meta, variant='decoded'),
+        )
+        result['decoded_key'] = decoded_key
+
+    s3_client.delete_object(Bucket=source_bucket, Key=source_key)
+    print(
+        f'DEAD_LETTER_MOVE reason={reason} '
+        f'src=s3://{source_bucket}/{source_key} '
+        f'dlq=s3://{dlq_bucket}/{raw_key}')
+    return result

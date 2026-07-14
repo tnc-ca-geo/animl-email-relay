@@ -21,3 +21,18 @@ class TestRidgetecParser(TestCase):
         self.assertEqual(parser.timezone, 'US/Los Angeles')
         self.assertEqual(parser.imei, '0815')
         self.assertEqual(parser.account_id, 'someone')
+
+
+class TestSwiftParser(TestCase):
+
+    def test_parse_swift(self):
+        parser = parsers.SwiftParser()
+        parser.feed(examples.SWIFT_EMAIL_BODY)
+        self.assertEqual(parser.camera_id, 'TEST CAM')
+        self.assertEqual(parser.date_time_created, '2026:07:10 11:15:46')
+
+    def test_parse_swift_missing_fields(self):
+        parser = parsers.SwiftParser()
+        parser.feed('unrelated body content')
+        self.assertIsNone(parser.camera_id)
+        self.assertIsNone(parser.date_time_created)

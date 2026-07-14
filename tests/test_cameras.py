@@ -49,7 +49,8 @@ class TestRidgetecCamera(TestCase):
         self.assertEqual(list(images), ['/tmp_path/an_image.jpg'])
         download_image.assert_called_once()
         download_image.assert_called_with(
-            'an_image.jpg', 'https://web.org/images/an_image.jpg')
+            'an_image.jpg',
+            'https://web.org/images/XWka0ylxSDAldA5WSAHrWeVtZpRHX5FBlLGA')
 
 
 class TestCuddebackCamera(TestCase):
@@ -62,8 +63,7 @@ class TestCuddebackCamera(TestCase):
 
     def test_get_cam_id(self):
         camera = cameras.CuddebackCamera(examples.CUDDEBACK_EMAIL)
-        # TODO: get exif
-        exif = camera.get_exif()
+        exif = [{'EXIF:UserComment': 'ID=B,OTHER=X'}]
         self.assertEqual(
             camera.prep_new_tags(existing_exif=exif), {'SerialNumber': 'B'})
 
@@ -74,5 +74,63 @@ class TestCuddebackCamera(TestCase):
     #     camera = cameras.CuddebackCamera(examples.CUDDEBACK_EMAIL)
     #     images = camera.get_images()
     #     self.assertEqual(list(images), ['/tmp_path/an_image.jpg']) # TODO: list of dicts as specidied above
+
+
+class TestSwiftCamera(TestCase):
+
+    def test_evaluate_make(self):
+        camera = cameras.SwiftCamera(examples.SWIFT_EMAIL)
+        self.assertTrue(camera.evaluate_make())
+        camera = cameras.SwiftCamera(examples.OTHER_EMAIL)
+        self.assertFalse(camera.evaluate_make())
+
+    def test_parse_metadata(self):
+        camera = cameras.SwiftCamera(examples.SWIFT_EMAIL)
+        self.assertEqual(camera.get_additional_metadata(), {
+            'camera_id': 'TEST CAM',
+            'date_time_created': '2026:07:10 11:15:46',
+            'serial_number': 'SYPR0799'})
+
+    def test_format_exifdata_no_existing(self):
+        camera = cameras.SwiftCamera(examples.SWIFT_EMAIL)
+        self.assertEqual(
+            camera.prep_new_tags(existing_exif=None), {
+                'Make': 'Swift',
+                'SerialNumber': 'SYPR0799',
+                'DateTimeOriginal': '2026:07:10 11:15:46',
+                'UserComment': 'CameraId=TEST CAM'})
+
+    def test_format_exifdata_with_existing(self):
+        camera = cameras.SwiftCamera(examples.SWIFT_EMAIL)
+        existing_exif = [{
+            'EXIF:Make': 'SIMCOM',
+            'EXIF:DateTimeOriginal': '2026:07:10 12:32:44'}]
+        # Make always overwrites; DateTimeOriginal is preserved because the
+        # image already has one.
+        self.assertEqual(
+            camera.prep_new_tags(existing_exif=existing_exif), {
+                'Make': 'Swift',
+                'SerialNumber': 'SYPR0799',
+                'UserComment': 'CameraId=TEST CAM'})
+
+    def test_parse_metadata_real_eml(self):
+        """
+        Exercise the real-world multipart/mixed structure and the base64
+        MIME-encoded subject line from a production Swift email.
+        """
+        camera = cameras.SwiftCamera(examples.SWIFT_EMAIL_REAL)
+        self.assertTrue(camera.evaluate_make())
+        self.assertEqual(camera.get_additional_metadata(), {
+            'camera_id': 'TEST CAM',
+            'date_time_created': '2026:07:10 12:32:44',
+            'serial_number': 'SYPR0799'})
+
+    @mock.patch('helpers.save_attached_images')
+    def test_get_images(self, save_attached_images):
+        save_attached_images.return_value = ['/tmp_path/an_image.jpg']
+        camera = cameras.SwiftCamera(examples.SWIFT_EMAIL)
+        images = camera.get_images()
+        self.assertEqual(list(images), ['/tmp_path/an_image.jpg'])
+        save_attached_images.assert_called_once_with(examples.SWIFT_EMAIL)
 
 

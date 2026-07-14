@@ -4,47 +4,60 @@ service: animl-email-relay
 
 provider:
   name: aws
-  runtime: python3.7
+  runtime: python3.9
   stage: ${opt:stage, 'dev'}
   region: us-west-2
   profile: animl
   iamRoleStatements:
-    - Effect: 'Allow'
+    - Effect: "Allow"
       Action:
-        - 's3:GetObject'
-        - 's3:ListBucket'
-        - 's3:DeleteObject'
+        - "s3:GetObject"
+        - "s3:ListBucket"
+        - "s3:DeleteObject"
       Resource:
         - Fn::Join:
-          - ''
-          - - 'arn:aws:s3:::'
-            - Ref: S3BucketAnimlemailstaging
+            - ""
+            - - "arn:aws:s3:::"
+              - Ref: S3BucketAnimlemailstaging
         - Fn::Join:
-          - ''
-          - - 'arn:aws:s3:::'
-            - Ref: S3BucketAnimlemailstaging
-            - '/*'
-    - Effect: 'Allow'
+            - ""
+            - - "arn:aws:s3:::"
+              - Ref: S3BucketAnimlemailstaging
+              - "/*"
+    - Effect: "Allow"
       Action:
-        - 's3:PutObject'    
+        - "s3:PutObject"
       Resource:
         - Fn::Join:
-          - ''
-          - - 'arn:aws:s3:::'
-            - animl-data-staging-${opt:stage, self:provider.stage, 'dev'}
+            - ""
+            - - "arn:aws:s3:::"
+              - animl-data-staging-${opt:stage, self:provider.stage, 'dev'}
         - Fn::Join:
-          - ''
-          - - 'arn:aws:s3:::'
-            - animl-data-staging-${opt:stage, self:provider.stage, 'dev'}
-            - '/*'
+            - ""
+            - - "arn:aws:s3:::"
+              - animl-data-staging-${opt:stage, self:provider.stage, 'dev'}
+              - "/*"
+    - Effect: "Allow"
+      Action:
+        - "s3:PutObject"
+      Resource:
+        - Fn::Join:
+            - ""
+            - - "arn:aws:s3:::"
+              - Ref: S3BucketAnimlemaildeadletter
+        - Fn::Join:
+            - ""
+            - - "arn:aws:s3:::"
+              - Ref: S3BucketAnimlemaildeadletter
+              - "/*"
     - Effect: Allow
       Action:
         - ssm:GetParameter
         - ssm:GetParameters
-      Resource: 
+      Resource:
         - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*
   iamManagedPolicies:
-    - 'arn:aws:iam::aws:policy/AWSLambdaExecute'
+    - "arn:aws:iam::aws:policy/AWSLambdaExecute"
   environment:
     STAGE: ${opt:stage, self:provider.stage, 'dev'}
 
@@ -73,16 +86,33 @@ resources:
           BlockPublicPolicy: true
           IgnorePublicAcls: true
           RestrictPublicBuckets: true
+    # Dead-letter bucket (emails that failed to process)
+    S3BucketAnimlemaildeadletter:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: animl-email-dead-letter-${opt:stage, self:provider.stage, 'dev'}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+    # SSM Param for the email dead-letter bucket
+    SSMParameterAnimlemaildeadletterbucket:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Description: Animl email dead-letter bucket name
+        Name: /images/email-dead-letter-bucket-${opt:stage, self:provider.stage, 'dev'}
+        Type: String
+        Value: animl-email-dead-letter-${opt:stage, self:provider.stage, 'dev'}
     # Bucket policy for animl-email-staging
     S3BucketPolicyAnimlEmailStagingBucketPolicy:
       Type: AWS::S3::BucketPolicy
-      Properties: 
-        Bucket: 
+      Properties:
+        Bucket:
           Ref: S3BucketAnimlemailstaging
-        PolicyDocument: 
-          Statement: 
-            -
-              Action: 
+        PolicyDocument:
+          Statement:
+            - Action:
                 - "s3:PutObject"
               Effect: "Allow"
               Resource:
@@ -106,7 +136,6 @@ resources:
     #     SourceAccount:
     #       Ref: AWS::AccountId
     #     SourceArn: arn:aws:s3:::animl-email-staging-${opt:stage, self:provider.stage, 'dev'}
-
 
 custom:
   pythonRequirements:

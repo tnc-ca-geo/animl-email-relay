@@ -3,6 +3,8 @@
 Implement cameras as subclass of BaseCamera class. Camera specific code should
 be contained to these classes.
 """
+# standard library
+import re
 # project
 import helpers
 import parsers
@@ -185,4 +187,60 @@ class SpartanCamera(BaseCamera):
 
     def prep_new_tags(self, existing_exif=None):
         return {'SerialNumber': self.metadata.get('camera_id')}
+
+
+class SwiftCamera(BaseCamera):
+    """
+    Implements Swift camera emails.
+    """
+    name = 'Swift'
+    # Serial number is embedded in the attachment filename in the subject
+    # line, e.g. `... -SYPR0799.JPG`.
+    SERIAL_RE = re.compile(r'-(SY[A-Z0-9]+)\.', re.IGNORECASE)
+
+    def get_exif(self, image):
+        return helpers.get_exif(image)
+
+    def evaluate_make(self):
+        return 'wuyuansys.net' in self.email['From']
+
+    def get_additional_metadata(self):
+        body_part = self.email.get_body(preferencelist=('plain',))
+        try:
+            body_text = body_part.get_content() if body_part else ''
+        except (KeyError, AttributeError):
+            body_text = ''
+        swift_parser = parsers.SwiftParser()
+        swift_parser.feed(body_text)
+        subject = self.email['subject'] or ''
+        serial_match = self.SERIAL_RE.search(subject)
+        return {
+            'camera_id': swift_parser.camera_id,
+            'date_time_created': swift_parser.date_time_created,
+            'serial_number': serial_match.group(1) if serial_match else None}
+
+    def get_images(self):
+        return helpers.save_attached_images(self.email)
+
+    def prep_new_tags(self, existing_exif=None):
+        existing_exif = [{}] if not existing_exif else existing_exif
+        existing = existing_exif[0]
+        camera_id = self.metadata.get('camera_id')
+        candidates = {
+            'Make': str(self),
+            'SerialNumber': self.metadata.get('serial_number'),
+            'DateTimeOriginal': self.metadata.get('date_time_created'),
+            'UserComment': (
+                f'CameraId={camera_id}' if camera_id else None)}
+        # Always normalize Make to our own label; for the other tags preserve
+        # any value the camera already wrote to the image's EXIF.
+        always_overwrite = {'Make'}
+        ret = {}
+        for key, value in candidates.items():
+            if not value:
+                continue
+            if key not in always_overwrite and existing.get(f'EXIF:{key}'):
+                continue
+            ret[key] = value
+        return ret
 

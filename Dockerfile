@@ -1,14 +1,18 @@
-FROM public.ecr.aws/sam/build-python3.7:latest
+ARG TARGETPLATFORM=linux/amd64
+FROM --platform=${TARGETPLATFORM} public.ecr.aws/sam/build-python3.9:latest
 
-# Download exiftool and copy its executable and dependencies into 
-# /output/exiftool/
+# Download exiftool and copy its executable and dependencies into
+# /output/exiftool/. This image is used as a pip-install sandbox by
+# serverless-python-requirements; animl-email-relay ships as a zip-based
+# Lambda (see serverless.yml), not a container image.
+
+ENV EXIF_V=13.59
 
 RUN mkdir /output && \
     cd /output && \
-    curl -o Image-ExifTool-13.32.tar.gz https://exiftool.org/Image-ExifTool-13.32.tar.gz && \
-    tar -zxf Image-ExifTool-13.32.tar.gz && \
+    curl -fsSL -o Image-ExifTool-${EXIF_V}.tar.gz "https://cdn.codefornature.org/mirror/Image-ExifTool-${EXIF_V}.tar.gz" && \
+    tar -zxf Image-ExifTool-${EXIF_V}.tar.gz && \
     mkdir exiftool && \
-    cp Image-ExifTool-13.32/exiftool exiftool/ && \
-    cp -r Image-ExifTool-13.32/lib exiftool/ \
-    # sed -i 's/#!\/usr\/bin\/perl -w/#!\/opt\/bin\/perl -w/' ./exiftool/exiftool
-    # && sed -i 'Ns/.*/replacement-line/' exiftool/exiftool
+    cp Image-ExifTool-${EXIF_V}/exiftool exiftool/ && \
+    cp -r Image-ExifTool-${EXIF_V}/lib exiftool/
+
