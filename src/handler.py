@@ -85,6 +85,7 @@ def handler(event, context):
         for camera_class in SUPPORTED_CAMERAS:
             camera = camera_class(msg)
             if camera.evaluate_make():
+                print(f'Camera make {camera.name} detected.')
                 break
         for image in camera.images():
             _, filename = os.path.split(image)
