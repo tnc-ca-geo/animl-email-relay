@@ -123,7 +123,7 @@ def enrich_exif(image_path, new_tags):
         except (ValueError, TypeError, ExifToolExecuteError) as err:
             print(f'{err.__class__.__name__}: {err}')
         except Exception as error:
-            print('An error ocurred setting tags:', error)
+            print('An error occurred setting tags:', error)
 
 
 def download_image(filename, img_url):

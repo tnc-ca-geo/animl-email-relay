@@ -123,7 +123,7 @@ class RidgetecCamera(BaseCamera):
             # TODO: double check why we're setting Make. 
             # Do Ridgetecs not include makes in their exif?
             'Make': str(self),
-            'SerialNumber': self.metadata.get('imei'),
+            'SerialNumber': str(self.metadata.get('imei')),
             'DateTimeOriginal': self.metadata.get(
                 'date_time_created', '').replace('-', ':'),
             'UserComment': f'AccountId={self.metadata.get("account_id")}'}
@@ -194,9 +194,8 @@ class SwiftCamera(BaseCamera):
     Implements Swift camera emails.
     """
     name = 'Swift'
-    # Serial number is embedded in the attachment filename in the subject
-    # line, e.g. `... -SYPR0799.JPG`.
-    SERIAL_RE = re.compile(r'-(SY[A-Z0-9]+)\.', re.IGNORECASE)
+    # IMEI is embedded in the attachment filename in the subject
+    IMEI_RE = re.compile(r'-(\d{15,16})-')
 
     def get_exif(self, image):
         return helpers.get_exif(image)
@@ -213,11 +212,11 @@ class SwiftCamera(BaseCamera):
         swift_parser = parsers.SwiftParser()
         swift_parser.feed(body_text)
         subject = self.email['subject'] or ''
-        serial_match = self.SERIAL_RE.search(subject)
+        imei_match = self.IMEI_RE.search(subject)
         return {
             'camera_id': swift_parser.camera_id,
             'date_time_created': swift_parser.date_time_created,
-            'serial_number': serial_match.group(1) if serial_match else None}
+            'imei': imei_match.group(1) if imei_match else None}
 
     def get_images(self):
         return helpers.save_attached_images(self.email)
@@ -228,7 +227,7 @@ class SwiftCamera(BaseCamera):
         camera_id = self.metadata.get('camera_id')
         candidates = {
             'Make': str(self),
-            'SerialNumber': self.metadata.get('serial_number'),
+            'SerialNumber': self.metadata.get('imei'),
             'DateTimeOriginal': self.metadata.get('date_time_created'),
             'UserComment': (
                 f'CameraId={camera_id}' if camera_id else None)}
