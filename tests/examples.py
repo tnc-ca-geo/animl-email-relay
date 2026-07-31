@@ -82,6 +82,33 @@ with open(
         _swift_fh.read(), policy=email.policy.default)
 
 
+'''
+UOVision / LinckEazi
+'''
+UOVISION_EMAIL_BODY = (
+    '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
+    'Dear auckland_council,<br>Received new photo!<br><br>'
+    'Date:20.07.2026<br>Time:12:07:42<br>Temperature:26\u2103<br>'
+    'Battery:100%<br>Signal:full<br>'
+    '<a href="https://example.com">'
+    '<img src="https://msp-thumbnail.oss-eu-central-1.aliyuncs.com'
+    '/35318_59471_20260720_080813575.jpg">'
+    '</a>'
+)
+UOVISION_EMAIL_SUBJECT = '35318_59471_20260720_080813575.jpg_TILLY'
+UOVISION_EMAIL = email.message.EmailMessage()
+UOVISION_EMAIL['From'] = 'pic2@mail.linckeazi.com'
+UOVISION_EMAIL['Subject'] = UOVISION_EMAIL_SUBJECT
+UOVISION_EMAIL.set_content(UOVISION_EMAIL_BODY, subtype='html')
+
+# Real-world UOVision .eml loaded from disk.
+with open(
+        os.path.join(os.path.dirname(__file__), 'example_uovision.eml'), 'rb') \
+        as _uovision_fh:
+    UOVISION_EMAIL_REAL = email.message_from_bytes(
+        _uovision_fh.read(), policy=email.policy.default)
+
+
 
 
 def create_chunked_image_response():

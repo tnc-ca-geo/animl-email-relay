@@ -3,6 +3,7 @@ Some camera specific parsers put here in order to keep the camera implementation
 code more readable.
 """
 # standard library
+import os
 import re
 from html import parser
 from urllib.parse import urlparse
@@ -80,3 +81,44 @@ class SwiftParser():
             day, month, year, time = dt_match.groups()
             # ExifTool expects DateTimeOriginal as 'YYYY:MM:DD HH:MM:SS'
             self.date_time_created = f'{year}:{month}:{day} {time}'
+
+
+class UOVisionParser(parser.HTMLParser):
+    """
+    Extract metadata from a UOVision / LinckEazi HTML email body.
+
+    Expected body format (HTML):
+        Date:DD.MM.YYYY<br>Time:HH:MM:SS<br>...
+        <img src="https://msp-thumbnail.../FILENAME.jpg">
+    """
+
+    DATE_RE = re.compile(r'Date:(\d{2})\.(\d{2})\.(\d{4})')
+    TIME_RE = re.compile(r'Time:(\d{2}:\d{2}:\d{2})')
+
+    def __init__(self):
+        super().__init__()
+        self.img_url = None
+        self.filename = 'UNKNOWN_FILENAME.JPG'
+        self.date_time_created = None
+        self._date = None
+        self._time = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'img':
+            for attr_name, attr_value in attrs:
+                if attr_name == 'src':
+                    self.img_url = attr_value
+                    self.filename = os.path.basename(
+                        urlparse(attr_value).path) or 'UNKNOWN_FILENAME.JPG'
+
+    def handle_data(self, data):
+        date_match = self.DATE_RE.search(data)
+        if date_match:
+            self._date = date_match.groups()  # (day, month, year)
+        time_match = self.TIME_RE.search(data)
+        if time_match:
+            self._time = time_match.group(1)
+        if self._date and self._time:
+            day, month, year = self._date
+            # ExifTool expects DateTimeOriginal as 'YYYY:MM:DD HH:MM:SS'
+            self.date_time_created = f'{year}:{month}:{day} {self._time}'

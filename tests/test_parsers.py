@@ -36,3 +36,23 @@ class TestSwiftParser(TestCase):
         parser.feed('unrelated body content')
         self.assertIsNone(parser.camera_id)
         self.assertIsNone(parser.date_time_created)
+
+
+class TestUOVisionParser(TestCase):
+
+    def test_parse_uovision_html_body(self):
+        p = parsers.UOVisionParser()
+        p.feed(examples.UOVISION_EMAIL_BODY)
+        self.assertEqual(
+            p.img_url,
+            'https://msp-thumbnail.oss-eu-central-1.aliyuncs.com'
+            '/35318_59471_20260720_080813575.jpg')
+        self.assertEqual(p.filename, '35318_59471_20260720_080813575.jpg')
+        self.assertEqual(p.date_time_created, '2026:07:20 12:07:42')
+
+    def test_parse_uovision_missing_fields(self):
+        p = parsers.UOVisionParser()
+        p.feed('<html><body>No image here</body></html>')
+        self.assertIsNone(p.img_url)
+        self.assertIsNone(p.date_time_created)
+        self.assertEqual(p.filename, 'UNKNOWN_FILENAME.JPG')
