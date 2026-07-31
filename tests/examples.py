@@ -82,6 +82,16 @@ with open(
         _swift_fh.read(), policy=email.policy.default)
 
 
+'''
+Spartan
+'''
+SPARTAN_EMAIL = email.message.EmailMessage()
+SPARTAN_EMAIL['From'] = 'alert@hcowireless.com'
+SPARTAN_EMAIL['Subject'] = '2026-07-30 13:43:18 - RedTankSRT'
+
+SPARTAN_EMAIL_NO_DATETIME = email.message.EmailMessage()
+SPARTAN_EMAIL_NO_DATETIME['From'] = 'alert@hcowireless.com'
+SPARTAN_EMAIL_NO_DATETIME['Subject'] = '- RedTankSRT'
 
 
 def create_chunked_image_response():
