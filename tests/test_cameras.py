@@ -134,3 +134,37 @@ class TestSwiftCamera(TestCase):
         save_attached_images.assert_called_once_with(examples.SWIFT_EMAIL)
 
 
+class TestSpartanCamera(TestCase):
+
+    def test_evaluate_make(self):
+        camera = cameras.SpartanCamera(examples.SPARTAN_EMAIL)
+        self.assertTrue(camera.evaluate_make())
+        camera = cameras.SpartanCamera(examples.OTHER_EMAIL)
+        self.assertFalse(camera.evaluate_make())
+
+    def test_parse_metadata(self):
+        camera = cameras.SpartanCamera(examples.SPARTAN_EMAIL)
+        self.assertEqual(camera.get_additional_metadata(), {
+            'camera_id': 'RedTankSRT',
+            'date_time_original': '2026:07:30 13:43:18'})
+
+    def test_format_exifdata_with_datetime_fallback(self):
+        camera = cameras.SpartanCamera(examples.SPARTAN_EMAIL)
+        self.assertEqual(
+            camera.prep_new_tags(existing_exif=None), {
+                'SerialNumber': 'RedTankSRT',
+                'DateTimeOriginal': '2026:07:30 13:43:18'})
+
+    def test_format_exifdata_existing_datetime_preserved(self):
+        camera = cameras.SpartanCamera(examples.SPARTAN_EMAIL)
+        existing = [{'EXIF:DateTimeOriginal': '2026:01:01 00:00:00'}]
+        result = camera.prep_new_tags(existing_exif=existing)
+        self.assertNotIn('DateTimeOriginal', result)
+        self.assertEqual(result.get('SerialNumber'), 'RedTankSRT')
+
+    def test_format_exifdata_no_subject_datetime(self):
+        camera = cameras.SpartanCamera(examples.SPARTAN_EMAIL_NO_DATETIME)
+        result = camera.prep_new_tags(existing_exif=None)
+        self.assertNotIn('DateTimeOriginal', result)
+
+

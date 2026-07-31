@@ -169,24 +169,44 @@ class SpartanCamera(BaseCamera):
     Implements Spartan camera emails.
     """
     name = 'Spartan'
+    DATETIME_RE = re.compile(r'^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})')
 
     def get_exif(self, image):
         return helpers.get_exif(image)
-    
+
     def evaluate_make(self):
         return 'hcowireless' in self.email['From']
-    
+
     def get_additional_metadata(self):
-        subject_line = self.email['subject']
+        subject_line = self.email['subject'] or ''
         print(f'subject line: {subject_line}')
-        camera_id = subject_line.split('-')[-1]
-        return {'camera_id': camera_id} if camera_id else {}
+        parts = subject_line.split(' - ')
+        camera_id = parts[-1].strip() if len(parts) > 1 else None
+        dt_match = self.DATETIME_RE.match(subject_line)
+        date_time_original = (
+            f'{dt_match.group(1)}:{dt_match.group(2)}:{dt_match.group(3)} '
+            f'{dt_match.group(4)}'
+            if dt_match else None)
+        ret = {}
+        if camera_id:
+            ret['camera_id'] = camera_id
+        if date_time_original:
+            ret['date_time_original'] = date_time_original
+        return ret
 
     def get_images(self):
         return helpers.save_attached_images(self.email)
 
     def prep_new_tags(self, existing_exif=None):
-        return {'SerialNumber': self.metadata.get('camera_id')}
+        existing_exif = [{}] if not existing_exif else existing_exif
+        ret = {}
+        camera_id = self.metadata.get('camera_id')
+        if camera_id:
+            ret['SerialNumber'] = camera_id
+        date_time_original = self.metadata.get('date_time_original')
+        if date_time_original and not existing_exif[0].get('EXIF:DateTimeOriginal'):
+            ret['DateTimeOriginal'] = date_time_original
+        return ret
 
 
 class SwiftCamera(BaseCamera):
