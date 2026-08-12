@@ -249,13 +249,12 @@ class UOVisionCamera(BaseCamera):
     Implements UOVision / LinckEazi camera emails.
 
     Images are delivered as a URL embedded in an HTML email body (not as
-    attachments).  Date/time is parsed from the body text.  Serial number
-    priority: (1) IMEI found in existing image EXIF, (2) camera name from
-    the email subject (user-assigned, e.g. "TILLY").
+    attachments).  Date/time is parsed from the body text.  The camera name
+    from the email subject (e.g. "TILLY") is used as the SerialNumber since
+    the IMEI is not embedded in the image EXIF.
     """
     name = 'UOVision'
     CAMERA_NAME_RE = re.compile(r'\.jpe?g_(.+)$', re.IGNORECASE)
-    IMEI_RE = re.compile(r'\b(\d{15,16})\b')
 
     def get_exif(self, image):
         return helpers.get_exif(image)
@@ -286,29 +285,13 @@ class UOVisionCamera(BaseCamera):
         url = self.metadata.get('img_url')
         yield helpers.download_image(filename, url)
 
-    def _find_imei(self, exif_dict):
-        """
-        Scan common EXIF fields for a 15-16 digit IMEI.
-        Returns the IMEI string if found, else None.
-        """
-        for field in ('EXIF:SerialNumber', 'EXIF:UserComment',
-                      'EXIF:ImageDescription', 'EXIF:Model'):
-            value = exif_dict.get(field, '')
-            if value:
-                m = self.IMEI_RE.search(str(value))
-                if m:
-                    return m.group(1)
-        return None
-
     def prep_new_tags(self, existing_exif=None):
         existing_exif = [{}] if not existing_exif else existing_exif
         existing = existing_exif[0]
-        imei = self._find_imei(existing)
-        serial = imei or self.metadata.get('camera_name')
         camera_name = self.metadata.get('camera_name')
         candidates = {
             'Make': str(self),
-            'SerialNumber': serial,
+            'SerialNumber': camera_name,
             'DateTimeOriginal': self.metadata.get('date_time_created'),
             'UserComment': (
                 f'CameraName={camera_name}' if camera_name else None)}

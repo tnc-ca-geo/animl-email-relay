@@ -153,7 +153,7 @@ class TestUOVisionCamera(TestCase):
             'camera_name': 'TILLY'})
 
     def test_format_exifdata_no_existing(self):
-        # No existing EXIF: camera_name used as SerialNumber fallback
+        # camera_name is always used as SerialNumber
         camera = cameras.UOVisionCamera(examples.UOVISION_EMAIL)
         self.assertEqual(
             camera.prep_new_tags(existing_exif=None), {
@@ -162,22 +162,12 @@ class TestUOVisionCamera(TestCase):
                 'DateTimeOriginal': '2026:07:20 12:07:42',
                 'UserComment': 'CameraName=TILLY'})
 
-    def test_format_exifdata_imei_in_exif_serial(self):
-        # IMEI already written as SerialNumber in image EXIF — preserve it
+    def test_format_exifdata_existing_serial_preserved(self):
+        # SerialNumber already in image EXIF — do not overwrite
         camera = cameras.UOVisionCamera(examples.UOVISION_EMAIL)
-        existing_exif = [{'EXIF:SerialNumber': '862754054677405'}]
+        existing_exif = [{'EXIF:SerialNumber': 'TILLY'}]
         result = camera.prep_new_tags(existing_exif=existing_exif)
         self.assertNotIn('SerialNumber', result)
-        self.assertEqual(result['Make'], 'UOVision')
-        self.assertEqual(result['DateTimeOriginal'], '2026:07:20 12:07:42')
-        self.assertEqual(result['UserComment'], 'CameraName=TILLY')
-
-    def test_format_exifdata_imei_in_user_comment(self):
-        # IMEI found in UserComment field — write it as SerialNumber
-        camera = cameras.UOVisionCamera(examples.UOVISION_EMAIL)
-        existing_exif = [{'EXIF:UserComment': 'IMEI=862754054677405'}]
-        result = camera.prep_new_tags(existing_exif=existing_exif)
-        self.assertEqual(result['SerialNumber'], '862754054677405')
 
     def test_format_exifdata_existing_datetime_preserved(self):
         # DateTimeOriginal already in image EXIF — do not overwrite
