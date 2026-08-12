@@ -27,7 +27,7 @@ SSM_NAMES = {
 # register camera classes, BaseCamera must be the last in the list
 SUPPORTED_CAMERAS = [
     cameras.RidgetecCamera, cameras.CuddebackCamera, cameras.SpartanCamera,
-    cameras.SwiftCamera, cameras.BaseCamera]
+    cameras.SwiftCamera, cameras.UOVisionCamera, cameras.BaseCamera]
 
 
 s3 = boto3.client('s3')

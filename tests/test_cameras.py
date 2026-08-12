@@ -168,3 +168,57 @@ class TestSpartanCamera(TestCase):
         self.assertNotIn('DateTimeOriginal', result)
 
 
+class TestUOVisionCamera(TestCase):
+
+    def test_evaluate_make(self):
+        camera = cameras.UOVisionCamera(examples.UOVISION_EMAIL)
+        self.assertTrue(camera.evaluate_make())
+        camera = cameras.UOVisionCamera(examples.OTHER_EMAIL)
+        self.assertFalse(camera.evaluate_make())
+
+    def test_parse_metadata(self):
+        camera = cameras.UOVisionCamera(examples.UOVISION_EMAIL)
+        self.assertEqual(camera.get_additional_metadata(), {
+            'img_url': (
+                'https://msp-thumbnail.oss-eu-central-1.aliyuncs.com'
+                '/35318_59471_20260720_080813575.jpg'),
+            'filename': '35318_59471_20260720_080813575.jpg',
+            'date_time_created': '2026:07:20 12:07:42',
+            'camera_name': 'TILLY'})
+
+    def test_format_exifdata_no_existing(self):
+        # camera_name is always used as SerialNumber
+        camera = cameras.UOVisionCamera(examples.UOVISION_EMAIL)
+        self.assertEqual(
+            camera.prep_new_tags(existing_exif=None), {
+                'Make': 'UOVision',
+                'SerialNumber': 'TILLY',
+                'DateTimeOriginal': '2026:07:20 12:07:42',
+                'UserComment': 'CameraName=TILLY'})
+
+    def test_format_exifdata_existing_serial_preserved(self):
+        # SerialNumber already in image EXIF — do not overwrite
+        camera = cameras.UOVisionCamera(examples.UOVISION_EMAIL)
+        existing_exif = [{'EXIF:SerialNumber': 'TILLY'}]
+        result = camera.prep_new_tags(existing_exif=existing_exif)
+        self.assertNotIn('SerialNumber', result)
+
+    def test_format_exifdata_existing_datetime_preserved(self):
+        # DateTimeOriginal already in image EXIF — do not overwrite
+        camera = cameras.UOVisionCamera(examples.UOVISION_EMAIL)
+        existing_exif = [{'EXIF:DateTimeOriginal': '2026:07:20 08:08:13'}]
+        result = camera.prep_new_tags(existing_exif=existing_exif)
+        self.assertNotIn('DateTimeOriginal', result)
+
+    @mock.patch('helpers.download_image')
+    def test_get_images(self, download_image):
+        download_image.return_value = '/tmp/35318_59471_20260720_080813575.jpg'
+        camera = cameras.UOVisionCamera(examples.UOVISION_EMAIL)
+        images = camera.get_images()
+        self.assertEqual(
+            list(images), ['/tmp/35318_59471_20260720_080813575.jpg'])
+        download_image.assert_called_once_with(
+            '35318_59471_20260720_080813575.jpg',
+            'https://msp-thumbnail.oss-eu-central-1.aliyuncs.com'
+            '/35318_59471_20260720_080813575.jpg')
+

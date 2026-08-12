@@ -1,0 +1,202 @@
+Received: from CH2PR19MB4007.namprd19.prod.outlook.com (2603:10b6:610:90::19)
+ by MN0PR19MB5898.namprd19.prod.outlook.com with HTTPS; Mon, 20 Jul 2026
+ 00:09:30 +0000
+ARC-Seal: i=2; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=pass;
+ b=qunAfuhZZuk2Ymz1C/JQJklSdMYtZ7VYNlZjPFG1qEioKrH43spMGdBlaDTIAUYVnMAeTLFT4tUa7qA0D252OaFXXW0bWTCRpmnsLLZZj15QTh2wkx3Pqblb4oHGY7hdN7PrfKtbqMD8XArD5qzseoVue3qfVy2OO3iP1BhlciptqkOjK4OPksvh8HA860xC21dRxEpIT8O8YxoWwszYxcxsnWH1bSG7EKKMWxyapBPI5wusCH+qA6Qc7PyylI6s1HI0I42AJDWZrDXZ0t0CqpUVoXZgg1gxEijh0dWl5/e9sTHrUg3UgRbX9x11U+ipjz0gO6Qf/2H2lHukmuO4MQ==
+ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=dHMv2TnZv2bRXsV96qehRlshMO5n5iK3hrPG0g26v5o=;
+ b=d235qe3+GKDyymczep18G4uXNGHX3sA8Vqfn/ktFV9RW6rsqZbcY5tOgsY6JyRgPFSmHIoS4cv5rX+hcwYG4jjF0lB2XEh8xF+XDAIwwm788CgY+PAVkM2xlu1fVLo7qPTeSyiO677wVidN+rJU5XFTqh26CSZzF7j8aXxQ/y0SmRRSRRivu4PoySa86FvtIOW3lrzQesyuu+XufUXOcFinZR4ePdHkoU4PNH8PD1QgbrxbiBBXAwvwaqV5BavDyvJjdkuUyb8mC6BrYizgBkExeBNF3oHD2emhNiYN2SGlSpKFmMPDanG40I9GLilwyjstsHIG5RU3UEjxd6W85/g==
+ARC-Authentication-Results: i=2; mx.microsoft.com 1; spf=fail (sender ip is
+ 170.10.132.61) smtp.rcpttodomain=tnc.org smtp.mailfrom=mail.linckeazi.com;
+ dmarc=fail (p=none sp=none pct=100) action=none
+ header.from=mail.linckeazi.com; dkim=fail (body hash did not verify)
+ header.d=mail.linckeazi.com; arc=pass (0 oda=0 ltdi=0 93)
+Received: from BN9PR03CA0364.namprd03.prod.outlook.com (2603:10b6:408:f7::9)
+ by CH2PR19MB4007.namprd19.prod.outlook.com (2603:10b6:610:90::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.223.16; Mon, 20 Jul
+ 2026 00:09:29 +0000
+Received: from BN3PEPF0000B374.namprd21.prod.outlook.com
+ (2603:10b6:408:f7:cafe::60) by BN9PR03CA0364.outlook.office365.com
+ (2603:10b6:408:f7::9) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.223.16 via Frontend Transport; Mon,
+ 20 Jul 2026 00:09:29 +0000
+Authentication-Results: spf=fail (sender IP is 170.10.132.61)
+ smtp.mailfrom=mail.linckeazi.com; dkim=fail (body hash did not verify)
+ header.d=mail.linckeazi.com;dmarc=fail action=none
+ header.from=mail.linckeazi.com;compauth=softpass reason=201
+Received-SPF: Fail (protection.outlook.com: domain of mail.linckeazi.com does
+ not designate 170.10.132.61 as permitted sender)
+ receiver=protection.outlook.com; client-ip=170.10.132.61;
+ helo=us-smtp-inbound-delivery-1.mimecast.com;
+Received: from us-smtp-inbound-delivery-1.mimecast.com (170.10.132.61) by
+ BN3PEPF0000B374.mail.protection.outlook.com (10.167.243.171) with Microsoft
+ SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id 15.21.270.0
+ via Frontend Transport; Mon, 20 Jul 2026 00:09:28 +0000
+ARC-Authentication-Results: i=1;
+	relay.mimecast.com;
+	dkim=pass header.d=mail.linckeazi.com header.s=aliyun-cn-hangzhou header.b=nFP3xuWa;
+	dmarc=pass (policy=none) header.from=mail.linckeazi.com;
+	spf=pass (relay.mimecast.com: domain of pic2@mail.linckeazi.com designates 115.124.21.199 as permitted sender) smtp.mailfrom=pic2@mail.linckeazi.com
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=dkim.mimecast.com; s=201903; t=1784506168;
+	h=from:from:reply-to:reply-to:subject:subject:date:date:
+	 message-id:message-id:to:to:cc:mime-version:mime-version:
+	 content-type:content-type:dkim-signature;
+	bh=dHMv2TnZv2bRXsV96qehRlshMO5n5iK3hrPG0g26v5o=;
+	b=KahmAxO7bUb+wx3/dLbM6QzzcS2eXK2D81+tQ4xLhtznevLoCCm5VpbF/75Q4ydMxNOYdM
+	NnR48YYkX9h1OjNPDWCq2CyVmc6iWT4+m+RW6DvTnnvcDzMUos297XYuMZjohECIOtimpa
+	QhgD2V0EWLcuNsuJ/QSPnOjLY0+9q4HQuhr6JtYG/rDf762XHwyWA4/iTCiw5EQi5OEGJc
+	hwYeBRGG+PoTteCUBShKTwYeCylcxSRQt7+Ma6jJ5s3iFIm/j9S/TodNAGAr6E/ouUstwq
+	f+Jgl2+QkflkAqbYqusWYQwi20ZyVWsWlSqp11NXb/TK9QqKT0An3faRofLgwQ==
+ARC-Seal: i=1; a=rsa-sha256; d=dkim.mimecast.com; s=201903; cv=none;
+	t=1784506168;
+	b=Jx0HeHNB8k0shB7nUob5ZvY+WUHohE96SEB5Ctr56q9W5bxyHE1+Twbwv+f7zR0AK852Th
+	MDvcWpba+p3QxbwaxpI0RAaQAjXkP8+7KhsgGNUDtcMpMLTgIpqGrOo1YtsFoaQkCZ0mGe
+	1gSLWJF/KSad03tHYl/3EWrP4Aas5Cy4v5LOg6Ddu7mxHXiz1KPzPTtCrjk1obhA2dzzVu
+	l3eN5B4LLVotL84lZI9QDkLRFWxkLE4hb28jYML7rBF33xdHgJZQ9iGCjArTGNFdQxTZEK
+	ivyYhylnz/iQ3pEovq/Oy6jq0QQRU85HUeVghkyQRsGPpNSOBSFZTKSn/Rb3Dw==
+Authentication-Results-Original: relay.mimecast.com;	dkim=pass
+ header.d=mail.linckeazi.com header.s=aliyun-cn-hangzhou header.b=nFP3xuWa;
+	dmarc=pass (policy=none) header.from=mail.linckeazi.com;	spf=pass
+ (relay.mimecast.com: domain of pic2@mail.linckeazi.com designates
+ 115.124.21.199 as permitted sender) smtp.mailfrom=pic2@mail.linckeazi.com
+Received: from out21-199.dm.aliyun.com (out21-199.dm.aliyun.com
+ [115.124.21.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-36-3jJhIxJRNZyUwt6zcODPsA-1; Sun, 19 Jul 2026 20:09:24 -0400
+X-MC-Unique: 3jJhIxJRNZyUwt6zcODPsA-1
+X-Mimecast-MFC-AGG-ID: 3jJhIxJRNZyUwt6zcODPsA_1784506162
+X-AliDM-RcptTo: bmF0aGFuaWVsLnJpbmRsYXViQHRuYy5vcmc=
+Feedback-ID: default:pic2@mail.linckeazi.com:alibabaq_SmtpTrigger:115475
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=mail.linckeazi.com; s=aliyun-cn-hangzhou;
+	t=1784506162; h=Date:From:To:Message-ID:Subject:MIME-Version:Content-Type;
+	bh=uvxMFuZbunFxnZCS8IxY93wL65JD75RF1ep9blrZUfY=;
+	b=nFP3xuWa1Y8b6/P1qGd9brT2AjDIbvpeBLgIde4VtlUJQYRMKUCrr9SilvzRnenc/Bto36IM6rxGqBcVpZtJn71A8f9BU5ynv1dT6HHEY6kDtyS1rBNnMvOOCjcNvUrQPKcZlgY4h6beO7glYfYjkKQXddYMOOKmywVaJVF4WLs=
+Received: from Euro-cloud-pro002(mailfrom:pic2@mail.linckeazi.com fp:SMTPD_-VHcG3v5Otk cluster:AY35D)
+          by smtpdm.aliyun.com(127.0.0.1);
+          Mon, 20 Jul 2026 08:09:21 +0800
+X-EnvId: 600000340541943622
+Date: Mon, 20 Jul 2026 08:09:18 +0800 (CST)
+From: pic2@mail.linckeazi.com
+Reply-To: support@linckeazi.com
+To: kaylarench@gmail.com, kaylarenchunitec@gmail.com,
+	nathaniel.rindlaub@tnc.org
+Message-ID: <627674807.7937675.1784506158766@Euro-cloud-pro002>
+Subject: 35318_59471_20260720_080813575.jpg_TILLY
+X-Mimecast-Spam-Score: 1
+X-Mimecast-MFC-PROC-ID: _i0GdpTxzLSpFTfM2ETkly__FoL32iRCSeAPENk2PLw_1784506162
+X-Mimecast-Impersonation-Protect: Policy=Newly Observed Domain Definition;Similar Internal Domain=false;Similar Monitored External Domain=false;Custom External Domain=false;Mimecast External Domain=false;Newly Observed Domain=false;Internal User Name=false;Custom Display Name List=false;Reply-to Address Mismatch=false;Targeted Threat Dictionary=false;Mimecast Threat Dictionary=false;Custom Threat Dictionary=false
+X-Mimecast-Impersonation-Protect: Policy=TNC Dictionary IP;Similar Internal Domain=false;Similar Monitored External Domain=false;Custom External Domain=false;Mimecast External Domain=false;Newly Observed Domain=false;Internal User Name=false;Custom Display Name List=false;Reply-to Address Mismatch=false;Targeted Threat Dictionary=false;Mimecast Threat Dictionary=false;Custom Threat Dictionary=false;External=true
+X-Mimecast-Impersonation-Protect: Policy=VIP Impersonation Definition;Similar Internal Domain=false;Similar Monitored External Domain=false;Custom External Domain=false;Mimecast External Domain=false;Newly Observed Domain=false;Internal User Name=false;Custom Display Name List=false;Reply-to Address Mismatch=false;Targeted Threat Dictionary=false;Mimecast Threat Dictionary=false;Custom Threat Dictionary=false
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_7937674_732849586.1784506158766"
+Return-Path: pic2@mail.linckeazi.com
+X-MS-Exchange-Organization-ExpirationStartTime: 20 Jul 2026 00:09:28.4136
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: 46352b77-7155-4f71-0a30-08dee5f32a63
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: 79be6dc1-d78e-4bbb-b22b-d994c0a417a7:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN3PEPF0000B374:EE_|CH2PR19MB4007:EE_|MN0PR19MB5898:EE_
+X-MS-Exchange-Organization-AuthSource: BN3PEPF0000B374.namprd21.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-Office365-Filtering-Correlation-Id: 46352b77-7155-4f71-0a30-08dee5f32a63
+X-MS-Exchange-AtpMessageProperties: SA|SL
+X-MS-Exchange-Organization-SCL: -1
+X-Microsoft-Antispam: BCL:0;ARA:13230040|2092899012|1032899013|12012899012|3072899012|82310400026|41022699024|31092699021|7049299003|69100299015|3109299003|7149299003|6133799003|4113699003|16102099003|55112099003|18003699003|8096899003|19002099009|4076899003|5063699009|56012099006|11063799006|2066899003|10067099003;
+X-Forefront-Antispam-Report: CIP:170.10.132.61;CTRY:US;LANG:en;SCL:-1;SRV:;IPV:CAL;SFV:SKN;H:us-smtp-inbound-delivery-1.mimecast.com;PTR:us-smtp-delivery-1.mimecast.com;CAT:NONE;SFS:(13230040)(2092899012)(1032899013)(12012899012)(3072899012)(82310400026)(41022699024)(31092699021)(7049299003)(69100299015)(3109299003)(7149299003)(6133799003)(4113699003)(16102099003)(55112099003)(18003699003)(8096899003)(19002099009)(4076899003)(5063699009)(56012099006)(11063799006)(2066899003)(10067099003);DIR:INB;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jul 2026 00:09:28.3590
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 46352b77-7155-4f71-0a30-08dee5f32a63
+X-MS-Exchange-CrossTenant-Id: 79be6dc1-d78e-4bbb-b22b-d994c0a417a7
+X-MS-Exchange-CrossTenant-AuthSource: BN3PEPF0000B374.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR19MB4007
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:02.5148590
+X-MS-Exchange-Processed-By-BccFoldering: 15.21.0223.005
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:0;jmr:0;auth:0;dest:I;ENG:(910005)(944506478)(944626604)(920097)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?MXl6bFRiT3NIMFpwL3ZveC90ZzhKejNveTVxVHYwRDlrSG1KMksvTHJYV2xU?=
+ =?utf-8?B?cjVFTS8yUnVTRW9aQjVpRzBiU1B6WElCeXpoNXJHUXJmb3FFQzdiK2lBTDNn?=
+ =?utf-8?B?KzlVVU5Vdk80cFFOQ2lncDVPcjVDTUlpQTdReFdLWVJ2R21pTkdSaW1tZ2hQ?=
+ =?utf-8?B?UjVYSGMwbUo2bHM0aEl2Rk5qK25OSmllOFlHREFId2k0NlVOR1A5TG5UT25T?=
+ =?utf-8?B?WmZOSXdBU3dNMlJDSko5Tm9oRm9FdExBRHcrdXE4dmlLNkQ2aHhlVFJIMVB0?=
+ =?utf-8?B?bDBnYjJjVWZndGZoM2ViOXFKVStSZWFKTWZOTlRTNG5PcEN2bXEvTkQxRTM1?=
+ =?utf-8?B?Zk03Ync2dTMwOGNjRTM4UEFidVlFaFYwUG5yNmkrU0tqY21icWFDSmRia1Y1?=
+ =?utf-8?B?WEl3NFkwakFhcW4wMVVtNGdBVkRpVmV1anJuR1NySXYxdXdCVU5mUDR3bG9v?=
+ =?utf-8?B?bXZvRVFEQldWWjU5d1AyRDBSUE1UQlNNWGc1d3hYRXA1c1dhSHlFTVVlOVNI?=
+ =?utf-8?B?UzRwT1Y1YndIR2k3TUwwWEFZdTRGOHRHOGhKTWdJMHZ0MFJlUmZ5OTRJLytU?=
+ =?utf-8?B?Ny84Z1MzNk9ZTWh2Znk1V2JGbjRhUUh5enJEeEwvWWVGdDRPUlRUelMrTGto?=
+ =?utf-8?B?MkhEQWQ3NTJtMUlGZVNRamdlVkY2dHA0UzdNanpFNGRQbWdjdnRSV3Zkd2dn?=
+ =?utf-8?B?Qy95ZkhOdmdOcGlZb2xiYS9zT2pMbW1kYXJCTTBEMW1zUXFtTXIvaldoUUs2?=
+ =?utf-8?B?bkYrak0xNE9yTnorWFRSallYVHRXYk81UU9mNU11cHY5WEdwOW4zdkphYWc1?=
+ =?utf-8?B?N0RNWDlmMWU0bithVExmUUlDL1JObkROVmJ6TklBR2FNQndmZVlFOCt1bVBY?=
+ =?utf-8?B?cjdaN20wMlE3Y2haUk9rQ3owdmNQYzJ6MWNyS1lwTHRDOFQ5VlZCcTNSV0Jm?=
+ =?utf-8?B?dWFWcVBBbVJsOUh0ZFNzNGRRUkIzbVo0QWlKR0QwYnI5NTl5SWw1WnBLOHM5?=
+ =?utf-8?B?R1pBaVc5M01TQ2psaVFhNUhUdEJwWDd5Z3BzY3pZVVUzY3dXMDhzVm53USsr?=
+ =?utf-8?B?Z0MvRjdSUCtpcjE0YjhlNXNrb2t2SlpLbWUxZkNUdlIvUGpUclJ5bktHTHlF?=
+ =?utf-8?B?eUYwbGFLaFhsTElkRkMxLzF4N2NzbVpCdXM0eTlTRGVUbnIzWEtJOXhObHhD?=
+ =?utf-8?B?ZDhrSzVSZWRzR0doZ1U2M2FWVGRwbDY0K0lpUitqYlpqUFREU1BqV0ZMbmpQ?=
+ =?utf-8?B?NjRUV0piR1AxSWcrNStVK2pvUVJuckw5NTlyUjl0RWhHMXZUczc0QlpKT3hj?=
+ =?utf-8?B?cmliSUJHbXh4RHdNcGRzdm1vd05ZRFFNSmx5Y2pIWk5CTjRWM3pQOGZlSVZW?=
+ =?utf-8?B?bGF6TUE5Z0xkTkc5V0trYW5ndTJzSEFoMjZoUFhpR0cwL3YwQWpSN2FPa3hy?=
+ =?utf-8?B?QjFVTVdnZm9NZmpUTTVXK2FNU1dxYnB3WXRvRXhaZXJXRFlEYnJKeGVLOEFh?=
+ =?utf-8?B?RVZRWjY1YlRvR2w0aHZlV1VPYXJOUmVnWGsxL0hxUFBJcUFLa1dsa3pBMTF6?=
+ =?utf-8?B?SmdHL2FlcTdSVHVNNHpPZ1cxWlp6OE1HOVYwZzEzMEZDMHhiSUtqZjhMcVg2?=
+ =?utf-8?B?U3pMZUN2Zit6aWk4NE1md2FIbjc2azFIbXpaRzEvNzRUR1oxWnh2L05wNS94?=
+ =?utf-8?B?cEs0dTdTQ3N0S1FtMnlLTWY4N29sWlhONUNtYXZtZHdDempnUDJiaGlKQndL?=
+ =?utf-8?B?QXBZMTB5RUVheWRRUHF1ZmJKQlVmU2V0Q3dwZUF1NmFhYVVBMGNtOWZYMzdM?=
+ =?utf-8?B?cjBRVFpUeEFhUFZ1bGRwTm00NnNJZU5hd1F1bWFxSE8vTmVNZUM1Ylc0QmZm?=
+ =?utf-8?B?bWVodDVpa1ZHRE5YaWRpZG1NVXZIelJIbWNadDlVd3NzdkRzK0FZUnZjWWFO?=
+ =?utf-8?B?K1k2K0RuQ25tRTJxR2JGMVc2UW9tQ1FiZ1RpNGdHSFQvTXNOdi93eDlRazJq?=
+ =?utf-8?B?ekEvcW5MTmxzVzN6bjlQZk5jNDhSd1Z0cmsvQVNlOTgvcThiZElSVklkSnlv?=
+ =?utf-8?B?WkZOaWpqRzhtVk00a2JsVnA3dEZaRFlKd0ZGNmdHR0o1UWtoMGxrTEI5S09Q?=
+ =?utf-8?B?YXg4VCt3dG1PL1VZbWVDWmNuOUl5NzEwNG4yTnBLb0NVcG1PUXNDSTU0S3Uv?=
+ =?utf-8?B?NGNJcVp3anFmb3RhK2w3Z01GaU5HR0REeCtUZkNTN1kzbXA1WVVWSGtVODNt?=
+ =?utf-8?B?SVpYSk5BYXlOVWpmNkQvRlNBdTZxSmlHa3RiZ3hDOXE4aHVVc0tDQjZyWXNw?=
+ =?utf-8?B?ZDdtemNOcXpYQlBZcktadzE1bFAxbzV4d2dQTjRRSHVjaEdtSnMzZE5YVGU0?=
+ =?utf-8?B?SFN1RDF6bTcyRDE5RlhLbVRZczRjWHRmbnl3RGZXbzZad2U0d2JzWG02ZW5m?=
+ =?utf-8?B?S3JjK3ZuS21zblZTYTVrVWxFL3A0SWpxQ21PbzY0S1NNQmZVTTh3Z2t3UENa?=
+ =?utf-8?B?RERtMnFnZmNmOGQ1a2JjR3Q4U2svVVRjaFZhTmRwRUpIbzFUUmprdTF6YUk3?=
+ =?utf-8?B?Snd2WWZUOXRZSWJVaE53ellHa3ZyWk9SMmREZEpmMjF6d2sxemNIa1NlUDgy?=
+ =?utf-8?B?dXRUUGljZDZDeVFJd0wzOGR0RTZVcklxMjBkU215bElmdHloMEZ1Y3pLVTd1?=
+ =?utf-8?B?cERSQ1plUDhTd1MzU3E0Ylg3L2MrY09ZQzVXU2lFak1ZR2YxSTlSSlRXWmhX?=
+ =?utf-8?B?WXlBeVRvNGJGTjRjTjRLZGpjZEZDMUVoYWFOSGdoS3gxV2NISXJQYmNtN2pW?=
+ =?utf-8?B?VXAwdGVITzRNbVBkdXNieUxLWXM2Y2VuM3ZKdXhnV0RYUStUNDIzcDBkZ2Mz?=
+ =?utf-8?B?ZldwU2p1OVhuYVJLaDJpMDJYcHNXNnV2OUt4ZTFsb0s5ajN5MUlqTG1kbzdm?=
+ =?utf-8?B?NS8yYjdyWkNDbkR4TEZoTUFEQU05U3ZsWkJqdUx5V0pSS1BnRnRMNWgvaE82?=
+ =?utf-8?B?Vy9QTzk0NDA0UW5UL2FWRFVuZEN6dkExSGZFM3RhdThRK1I2UlBsT0kyalJV?=
+ =?utf-8?B?TmU3V24vQVN4Z2pPQnNlNmp1bHhXNndWZDNqWDVCcHErdW1tMnB3U0VaZEZH?=
+ =?utf-8?B?Z3JqTVlHbnlQbHAyVGdDM1dtSDhvZGY0bnFLVUxYeFp1OVpacEQzUWNnbnhS?=
+ =?utf-8?B?RnYrNk9wazZSNUl0aW9EY0Fac3hzbGt2L0xsTDgzYUYwZlEzcW5DaFRheWZK?=
+ =?utf-8?B?T0ZFdlplbWpnUEV0eVdrbGlVWnlIaGUvT1lDdFdGT2ZqeHoxb1BzSzFxSkMv?=
+ =?utf-8?B?bHh1Q0VrNDJINjlCRFVpOGtmZ1FQQmRIeW9IMy9iQUZNZGF5TkhjbmdyU3M3?=
+ =?utf-8?B?SkxwTml1SW9jaUdXNTFrOWxzNFI1WVpKZk9pK09keFY3QWl0bm9YaThvVVlY?=
+ =?utf-8?Q?XqA1beGQBvkSoWwwYbg=3D?=
+MIME-Version: 1.0
+
+------=_Part_7937674_732849586.1784506158766
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8">De=
+ar auckland_council,<br>Received new photo!<br><br>Date:20.07.2026<br>Time:=
+12:07:42<br>Temperature:26=E2=84=83          79.0=E2=84=89<br>Battery:100%<=
+br>Signal:full<br>SD card free space: 28.9GB of 29.0GB(100%)<br>Trigger Mod=
+e:P<br><a href=3D"https://url.us.m.mimecastprotect.com/s/yOfJCL91GgiR3yvDWS=
+BfMfyxO_Z?domain=3Dmsp-thumbnail.oss-eu-central-1.aliyuncs.com"><img src=3D=
+"https://msp-thumbnail.oss-eu-central-1.aliyuncs.com/35318_59471_20260720_0=
+80813575.jpg"></a><br><br>Regards,<br>The LinckEazi Cloud Developer Team<br=
+>
+
+------=_Part_7937674_732849586.1784506158766--
